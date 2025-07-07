@@ -1,0 +1,11 @@
+
+{
+  "tasks": [
+    {
+      "id": "ask_user",
+      "description": "Frage den Nutzer, ob es etwas zu tun gibt",
+      "enabled": true,
+      "interval": "startup"
+    }
+  ]
+}
