@@ -1,0 +1,9 @@
+# proposals/proposal_manifest.yaml
+
+- id: mod_20250723_001
+  title: "Stimmungsabhängiges Wettermodul"
+  description: "Kimba soll Wetterdaten laden und ihre Stimmung anpassen."
+  file: "proposals/generated_modules/module_20250723_001.py"
+  status: "pending"  # options: accepted, rejected, pending
+  tags: ["mood", "weather", "external"]
+  created: "2025-07-23 15:34"

@@ -1,4 +1,3 @@
-
 # Kimba vX – Hauptmodul
 # Starte dein Soulmate-Interface & Routing
 
@@ -10,20 +9,28 @@ from core.memory_store import KimbaMemory
 from identity.identity_engine import load_identity
 
 def main():
+    """
+    EN: Entry point of Kimba vX. Loads identity, initializes memory and language model,
+    then launches the graphical interface.
+
+    DE: Einstiegspunkt von Kimba vX. Lädt die Identität, initialisiert Gedächtnis und Sprachmodell
+    und startet anschließend die grafische Oberfläche.
+    """
     print("🧠 Kimba vX wird gestartet ...")
 
-    # Kimba lädt ihre Identität
+    # 🧬 Load personality profile
     identity = load_identity("identity/personality.json")
     print(f"🧬 Geladene Identität: {identity['identity']['role']}")
 
-    # Initialisiere Gedächtnis
+    # 🧠 Initialize memory system
     memory = KimbaMemory("memory/kimba_memory/")
 
-    # Initialisiere LLM-Schnittstelle
+    # 🔤 Initialize LLM interface
     llm = KimbaLLM(model=identity['version'], mode="auto")
 
-    # Starte grafische Oberfläche
+    # 🎨 Launch visual interface
     launch_gui(llm, memory, identity)
 
+# 🔁 Direktstart, wenn Datei direkt ausgeführt wird
 if __name__ == "__main__":
     main()

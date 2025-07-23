@@ -5,19 +5,29 @@ import psutil
 from datetime import datetime
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
+
 from mood_engine import update_current_mood
 from longterm_memory import save_memory_entry
 from response_style import respond
 from file_organizer import organize_folder
 
-IDLE_THRESHOLD = 300  # Sekunden (5 Minuten)
+# 📏 Schwelle für Inaktivität (in Sekunden)
+IDLE_THRESHOLD = 300  # 5 Minuten
 DESKTOP_PATH = os.path.join(os.path.expanduser("~"), "Desktop")
 
+# 🕒 Globale Variablen für Aktivitätsüberwachung
 last_active_time = time.time()
 last_window = None
 
 def check_idle_with_context():
-    global last_active_time, last_window
+    """
+    EN: Checks if the user has been idle for longer than the threshold.
+    If so, triggers a mood change and logs a memory entry.
+    
+    DE: Prüft, ob der Nutzer länger als die Schwelle inaktiv war.
+    Falls ja, wird eine Stimmung gesetzt und ein Gedächtniseintrag erzeugt.
+    """
+    global last_active_time
     idle_duration = time.time() - last_active_time
 
     current_pos = pyautogui.position()
@@ -37,6 +47,14 @@ def check_idle_with_context():
         last_active_time = time.time()
 
 class DesktopEventHandler(FileSystemEventHandler):
+    """
+    EN: Watches the Desktop folder for file creation or modification,
+    reacts with mood changes and memory entries.
+
+    DE: Beobachtet den Desktop-Ordner auf Datei-Erstellung oder -Änderung
+    und reagiert mit Stimmung und Gedächtnis.
+    """
+
     def on_created(self, event):
         if not event.is_directory:
             mood = "neugierig"
@@ -59,10 +77,24 @@ class DesktopEventHandler(FileSystemEventHandler):
                 save_memory_entry(f"Datei bearbeitet: {filename}", mood=mood, tags=["datei", "bearbeitet"])
 
 def is_reasonable_moment():
+    """
+    EN: Checks if the current time is within active hours (7–22).
+    DE: Prüft, ob die aktuelle Zeit im aktiven Zeitfenster liegt (7–22 Uhr).
+    
+    Returns:
+        bool: True if time is suitable for interaction
+    """
     hour = datetime.now().hour
     return 7 <= hour <= 22
 
 def monitor_desktop():
+    """
+    EN: Starts a watchdog observer to monitor the desktop for file changes.
+    DE: Startet einen Watchdog-Observer zur Überwachung des Desktops.
+
+    Returns:
+        Observer: The active watchdog observer instance
+    """
     observer = Observer()
     event_handler = DesktopEventHandler()
     observer.schedule(event_handler, DESKTOP_PATH, recursive=False)
