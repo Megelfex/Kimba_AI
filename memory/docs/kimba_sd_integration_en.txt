@@ -1,0 +1,32 @@
+
+---
+
+### 🇺🇸 `kimba_sd_integration_en.md`
+
+```markdown
+# 🎨 Kimba Stable Diffusion Integration – Documentation (EN)
+
+## 📌 Goal
+This module allows Kimba to use **Stable Diffusion** to create realistic, stylized or fantastical images – of herself, scenes, creative ideas, and more.
+
+---
+
+## 🔧 Model Used
+**Model:** `Realistic Vision V6.0`  
+**Format:** `safetensors`  
+**Path:** `models/stable-diffusion/realisticVisionV60.safetensors`  
+**Source:** https://civitai.com/models/4201/realistic-vision-v60
+
+---
+
+## 🧠 Used by Kimba for:
+- Avatars / Mood representation
+- Supporting storytelling
+- Generating creative illustrations
+- Visual outputs for dialogues and tasks
+
+---
+
+## 🗣 Example Prompt
+```python
+"Create a dreamy image of Kimba in Ghibli-style at sunset on the beach"
