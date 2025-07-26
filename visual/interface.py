@@ -1,6 +1,8 @@
+import sys
+import os 
 import gradio as gr
 
-def launch_gui(llm, memory, identity):
+def launch_gui(llm, memory):
     """
     EN: Launches the Kimba Chat GUI using Gradio.
     It connects the LLM response system with memory logging and offers a simple user interface.

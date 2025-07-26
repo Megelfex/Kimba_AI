@@ -4,11 +4,11 @@ import os
 class KimbaLLMRouter:
     def __init__(self):
         self.model_paths = {
-            "default": "models/openhermes-2.5-mistral-7b.Q5_K_M.gguf",
-            "creative": "models/mythomax-l2-13b.Q5_K_M.gguf",
-            "core": "models/llama3.1-8b-instruct.Q5_K_M.gguf",
-            "code": "models/deepseek-coder.Q5_K_M.gguf",
-            "empathy": "models/dolphin-2.9-mixtral-8x7b.Q5_K_M.gguf"
+            "general": "models/llm/general/openhermes-2.5-mistral-7b.Q5_K_M.gguf",
+            "creative": "models/llm/creative/mythomax-l2-13b.Q5_K_M.gguf",
+            "core": "models/llm/core/llama3.1-8b-instruct.Q5_K_M.gguf",
+            "code": "models/llm/code/deepseek-coder.Q5_K_M.gguf",
+            "empathy": "models/llm/empathy/dolphin-2.9-mixtral-8x7b.Q5_K_M.gguf"
         }
 
         self.models = {}  # lazy cache
