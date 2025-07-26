@@ -5,7 +5,7 @@ from core.longterm_memory import save_memory_entry
 from core.mood_engine import update_current_mood
 from modules.response_style import respond
 
-# Erweiterbare Kategorien
+# 📁 Erweiterbares Mapping: Dateiendung → Zielordner
 FOLDER_MAP = {
     ".pdf": "Dokumente",
     ".txt": "Notizen",
@@ -21,14 +21,29 @@ FOLDER_MAP = {
     ".exe": "Programme"
 }
 
+# 📂 Basisziel: ~/Desktop/Sortiert
 TARGET_BASE = os.path.join(os.path.expanduser("~"), "Desktop", "Sortiert")
 
 def ensure_target_dirs():
+    """
+    EN: Ensures all target folders from FOLDER_MAP exist inside the sort base directory.
+    DE: Stellt sicher, dass alle Zielordner aus FOLDER_MAP im Sortierverzeichnis existieren.
+    """
     os.makedirs(TARGET_BASE, exist_ok=True)
     for folder in set(FOLDER_MAP.values()):
         os.makedirs(os.path.join(TARGET_BASE, folder), exist_ok=True)
 
 def organize_folder(path):
+    """
+    EN: Scans the given folder for files and moves them into sorted subfolders
+    based on their file extensions. If files are moved, a mood is set and a memory entry is logged.
+
+    DE: Durchsucht den angegebenen Ordner und verschiebt Dateien anhand ihrer Endung
+    in sortierte Unterordner. Bei Erfolgen wird Stimmung gesetzt und ein Gedächtniseintrag gespeichert.
+
+    Args:
+        path (str): Path to the folder to organize (e.g. Desktop)
+    """
     ensure_target_dirs()
     moved_files = []
 
@@ -45,12 +60,16 @@ def organize_folder(path):
     if moved_files:
         mood = "fokussiert"
         update_current_mood(mood)
-        save_memory_entry(f"Ich habe {len(moved_files)} Datei(en) sortiert: {', '.join(moved_files)}", mood=mood, tags=["sortierung", "dateien"])
-        print(f"🧹 Kimba (fokussiert): Ich habe den Ordner aufgeräumt!")
+        save_memory_entry(
+            f"Ich habe {len(moved_files)} Datei(en) sortiert: {', '.join(moved_files)}",
+            mood=mood,
+            tags=["sortierung", "dateien"]
+        )
+        print("🧹 Kimba (fokussiert): Ich habe den Ordner aufgeräumt!")
         print(respond(mood))
     else:
         print("✨ Kimba: Alles war schon ordentlich!")
 
-# Beispiel
+# ▶️ Testlauf bei direkter Ausführung
 if __name__ == "__main__":
     organize_folder(os.path.join(os.path.expanduser("~"), "Desktop"))

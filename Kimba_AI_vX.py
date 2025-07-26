@@ -7,29 +7,43 @@ from identity.identity_engine import load_identity
 from core.kimba_core import start_core
 
 def launch_trigger():
+    """
+    EN: Starts the external event trigger system (e.g., desktop monitoring).
+    DE: Startet das externe Ereignis-Trigger-System (z. B. Desktop-Überwachung).
+    """
     os.system("python event_triggers_v3.py")
 
 def main():
+    """
+    EN: Main entry point of Kimba vX.
+    Loads identity, initializes memory and language model,
+    starts internal core (self-awareness), launches event triggers and GUI.
+
+    DE: Haupteinstiegspunkt von Kimba vX.
+    Lädt die Identität, initialisiert Gedächtnis & Sprachmodell,
+    startet Kimba Core (Selbstbewusstsein), Trigger und GUI.
+    """
     print("🧠 Kimba vX wird gestartet ...")
 
-    # Kimba lädt ihre Identität
+    # 🧬 Load identity
     identity = load_identity("identity/personality.json")
     print(f"🧬 Geladene Identität: {identity['identity']['role']}")
 
-    # Initialisiere Gedächtnis
+    # 🧠 Initialize long-term memory
     memory = KimbaMemory("memory/kimba_memory/")
 
-    # Initialisiere LLM-Schnittstelle
+    # 🔤 Initialize language model (LLM)
     llm = KimbaLLM(model=identity['identity']['version'], mode="auto")
 
-    # Starte Kimba Core (Bewusstsein, Desktop-Verknüpfung etc.)
+    # 🔁 Start Kimba Core (self-awareness, reasoning loop, mood sync)
     start_core()
 
-    # Starte Trigger-System
+    # 🖥️ Launch background trigger system (file events, idle check, etc.)
     threading.Thread(target=launch_trigger).start()
 
-    # Starte grafische Oberfläche
+    # 🎨 Start GUI
     launch_gui(llm, memory, identity)
 
+# ▶️ Direct start if run as main
 if __name__ == "__main__":
     main()

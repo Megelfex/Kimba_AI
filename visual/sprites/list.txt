@@ -1,0 +1,54 @@
+idle_neutral	1–2	Ruhig sitzend, leichte Bewegung
+happy_idle	4–6	Zuckende Ohren, Lächeln, Schwanz bewegt
+excited	2–4	Lächelt breit, leicht springend
+angry	1–3	Ohren zurück, fauchend
+curious	2–3	Kopf leicht geneigt, aufmerksam
+sad	1–2	Kopf und Ohren hängen, müder Blick
+tired	1–2	Augen halbgeschlossen, langsam
+sleeping	3–4	Liegt oder eingerollt, ruhig atmend
+confused	1–2	Schiefer Kopf, Stirnrunzeln
+blinking	2	Zwinkert oder schließt Augen kurz
+purring	3–5	Augen halbgeschlossen, vibrierend
+annoyed	2–3
+Verhalten	Frames	Beschreibung
+sitting	1	Aufrechter Sitz (Standardpose)
+lying_on_side	1–2	Auf der Seite schlafend
+curled_up	1–2	Eingerollt wie Schnecke
+hanging_from_edge	1	Beide Vorderpfoten an Fensterkante
+peeking_over_edge	2–3	Nur Kopf guckt über Fenster
+climbing_up	3–4	Körper an Kante ziehend
+stretching	2–3	Reckt sich oder gähnt
+paw_swipe	2–3	Schlägt mit einer Pfote z. B. gegen Fenster
+rolling	3–4	Rollt sich auf dem Rücken
+tail_wagging	3–6	Leicht genervt oder wachsam
+jumping_down	2–3	Bewegung vom Fenster zum Boden
+walking_left	4–6	Seitwärts nach links
+walking_right	4–6	Seitwärts nach rechts
+sniffing	2–3	Kopf tief, erkundet Boden
+licking_paw	2–3	Putzt sich
+
+🔁 Transitions (Optional – für flüssige Übergänge)
+Transition	Frames	Beispiel
+sit_to_sleep	2–3	Kimba legt sich hin
+sleep_to_wake	2–3	Gähnt, richtet sich langsam auf
+happy_to_idle	2	Lächeln geht zurück in Neutralität
+peek_to_climb	2	Kopf verschwindet, Körper klettert
+
+🐾 Walking (loop)	8–10	Sauberer Bewegungszyklus mit Tail-Sway & Schulterversatz
+🛏 Sit → Sleep	6–8	Gähnen, Einkringeln, Kopfablage (ruhiger Auslauf)
+🌅 Sleep → Wake Up	6–8	Blinzeln, Strecken, Ohren heben, langsam aufrichten
+😐 Idle → Emotion	4–6	Z. B. Augen auf, Schwanz hebt sich – subtiler Wechsel
+😿 Emotion → Emotion	4–6	Ggf. Zwischenpose (z. B. Neutral), um Wechsel abzupuffern
+😊 Emotion → Idle	4–6	Zurück zur Ruhehaltung, entspannte Mimik
+🚶‍♀️ Walk → Jump	6	Vorbereitungsbewegung (ducken), Sprungimpuls
+🐒 Jump → Climb	6–8	Aufprall + Krallen greifen + Körper nachziehen
+👀 Climb → Peek	4–6	Hochziehen, Kopf vorschieben, Ohren drehen
+🫣 Peeking (Loop)	4–6	Kleine Neigungen, Blinzeln, Schwanzzucken
+
+
+Alle Posen als PNG mit transparentem Hintergrund
+
+Einheitliche Größe (z. B. 512x768 px)
+
+
+

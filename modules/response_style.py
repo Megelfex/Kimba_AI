@@ -1,6 +1,6 @@
 import random
 
-# Beispielhafte Antwortvarianten je Stimmung
+# 📚 Beispielhafte Reaktionen je Stimmung
 RESPONSES = {
     "fröhlich": [
         "Wuhu, das find ich super 😸",
@@ -34,12 +34,21 @@ RESPONSES = {
     ]
 }
 
-# Wählt eine zufällige Antwort basierend auf Stimmung
 def respond(message_type="neutral"):
+    """
+    EN: Returns a randomized response string based on mood/emotion category.
+    DE: Gibt eine zufällige Antwort basierend auf Stimmung oder Emotionskategorie zurück.
+
+    Args:
+        message_type (str): Mood type (e.g., "fröhlich", "fokussiert", "müde", ...)
+
+    Returns:
+        str: Natural-sounding response string matching the mood
+    """
     options = RESPONSES.get(message_type, RESPONSES["neutral"])
     return random.choice(options)
 
-# Beispieltest
+# 🧪 Testläufe für alle Stimmungen
 if __name__ == "__main__":
     for mood in RESPONSES:
         print(f"{mood.upper()}: {respond(mood)}")

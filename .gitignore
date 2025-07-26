@@ -1,0 +1,104 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+.venv/
+env/
+venv/
+
+# VS Code settings
+.vscode/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+
+# Local data, logs, datasets
+logs/
+*.log
+*.tmp
+*.bak
+datasets/
+models/
+
+# Environment variables and config
+.env
+.env.*
+config/*.json
+config/*.yaml
+config/*.toml
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Python-specific cache and compiled binaries
+*.pyd
+*.so
+
+# Gradio and web cache
+gradio_cached_examples/
+frontend/node_modules/
+
+# Tests and coverage
+coverage/
+htmlcov/
+*.cover
+*.py,cover
+.cache/
+nosetests.xml
+coverage.xml
+*.coveragerc
+test-results/
+
+# Custom folders (based on your structure)
+core/__pycache__/
+modules/__pycache__/
+tools/__pycache__/
+memory/__pycache__/
+identity/__pycache__/
+visual/__pycache__/
+desktop_kimba/__pycache__/
+
+# Unity / GameDev temp
+game_dev/Temp/
+game_dev/Library/
+game_dev/obj/
+game_dev/Build/
+
+# Audio/Visual Assets (keep separate from Git if large or licensed)
+assets/
+*.mp3
+*.wav
+*.ogg
+*.mp4
+*.webm
+*.gif
+*.jpg
+*.png
+
+# AI model files
+*.gguf
+*.bin
+*.ckpt
+*.pth
+*.pt
+
+# PyCharm
+.idea/
+
+# Backup files
+*.bak
+*.swp
+*.swo
+*~
+
+# Ignore README artifacts if generated
+README_old.md
+README_dev.md

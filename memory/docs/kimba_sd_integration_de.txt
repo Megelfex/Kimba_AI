@@ -1,0 +1,29 @@
+# 🎨 Kimba Stable Diffusion Integration – Dokumentation (DE)
+
+## 📌 Ziel
+Dieses Modul erlaubt Kimba die Verwendung von **Stable Diffusion**, um realistische, stilisierte oder fantasievolle Bilder zu erzeugen – z. B. von sich selbst, von Szenen oder für kreative Projekte.
+
+---
+
+## 🔧 Verwendetes Modell
+**Modell:** `Realistic Vision V6.0`  
+**Format:** `safetensors`  
+**Pfad:** `models/stable-diffusion/realisticVisionV60.safetensors`  
+**Quelle:** https://civitai.com/models/4201/realistic-vision-v60
+
+---
+
+## 🧠 Nutzung durch Kimba
+- Die Bildgenerierung erfolgt über das Modul `modules/image_generation/sd_engine.py`.
+- Prompts können in `prompt_templates.json` vordefiniert werden.
+- Kimba nutzt dieses Modul für:
+  - Avatare / Stimmungen visualisieren
+  - Storytelling unterstützen
+  - Illustrationen für Projekte erstellen
+  - Fantasievolle Ausgaben generieren
+
+---
+
+## 🗣 Beispielprompt
+```python
+"Erstelle ein verträumtes Bild von Kimba im Stil von Ghibli bei Sonnenuntergang am Strand"

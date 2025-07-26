@@ -5,9 +5,18 @@ import datetime
 import json
 import os
 
+# Speicherort für Systemstatus-JSON-Datei
+# Location for persisted system identity data
 SYSTEM_STATUS_PATH = "memory/system_status.json"
 
 def get_system_identity():
+    """
+    EN: Collects and returns system identity and environment information. Also writes a JSON file for reference.
+    DE: Sammelt und gibt Systemidentität und Umgebungsinformationen zurück. Speichert zusätzlich eine JSON-Datei zur Referenz.
+
+    Returns:
+        dict: A dictionary containing system information including OS, CPU, RAM, uptime, etc.
+    """
     identity = {
         "os": platform.system(),
         "os_version": platform.version(),
@@ -25,7 +34,8 @@ def get_system_identity():
 
     return identity
 
-# Testfunktion
+# 🔧 Manual test call when run as standalone script
+# 🔍 Manueller Test beim direkten Ausführen des Skripts
 if __name__ == "__main__":
     data = get_system_identity()
     for key, value in data.items():
