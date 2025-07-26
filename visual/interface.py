@@ -1,39 +1,31 @@
-import sys
-import os 
 import gradio as gr
+import asyncio
+from core.llm_router import KimbaLLMRouter
+from visual.kimba_terminal_ui import launch_terminal_ui
 
-def launch_gui(llm, memory):
-    """
-    EN: Launches the Kimba Chat GUI using Gradio.
-    It connects the LLM response system with memory logging and offers a simple user interface.
+llm = KimbaLLMRouter()
 
-    DE: Startet die Kimba-Chat-Oberfläche über Gradio.
-    Verknüpft das LLM-Antwortsystem mit Memory-Logging und bietet eine einfache Benutzeroberfläche.
+# Diese Funktion ist vollständig kompatibel mit type="messages"
+def chat(messages: list):
+    last_user_msg = messages[-1]["content"]
+    reply = llm.ask(last_user_msg)
+    return messages + [{"role": "assistant", "content": reply}]
 
-    Args:
-        llm (object): An instance of KimbaLLM or similar LLM interface.
-        memory (object): An instance of KimbaMemory or similar memory interface.
-        identity (dict): Dictionary representing Kimba's identity (not yet used directly here).
-    """
 
-    def chat(user_input, history=None):
-        """
-        EN: Handles a single chat interaction.
-        Passes input to LLM, stores both user prompt and response in memory.
+def launch_gui():
+    # Starte Terminal-UI parallel (optional)
+    asyncio.get_event_loop().run_in_executor(None, launch_terminal_ui, lambda x: llm.ask(x))
 
-        DE: Verarbeitet eine einzelne Chat-Interaktion.
-        Übergibt Eingabe an das LLM, speichert Nutzerfrage und Antwort im Gedächtnis.
+    # Starte Gradio Chat UI
+    iface = gr.ChatInterface(
+    fn=chat,
+    type="messages",  # wichtig!
+    title="Kimba vX",
+    description="Dein digitaler Soulmate im Terminal & Browser.",
+    theme="soft",
+)
 
-        Args:
-            user_input (str): Text entered by the user.
-            history (list, optional): Not used currently.
+    iface.launch(share=False)
 
-        Returns:
-            str: LLM response
-        """
-        response = llm.ask(user_input)
-        memory.remember({"user": user_input, "kimba": response})
-        return response
-
-    # 🎨 Launch Gradio Chat UI
-    gr.ChatInterface(chat, title="🤖 Kimba – Dein digitaler Soulmate").launch()
+if __name__ == "__main__":
+    launch_gui()

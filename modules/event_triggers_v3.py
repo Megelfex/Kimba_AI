@@ -1,11 +1,15 @@
 import time
 import pyautogui
 import os
+import sys
 import psutil
 from datetime import datetime
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
-from kimba_core import kimba_say, kimba_organize
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from core.kimba_core import kimba_say, kimba_organize
 
 # ⏱️ Zeit in Sekunden bis als "inaktiv" gezählt wird
 IDLE_THRESHOLD = 300  # 5 Minuten

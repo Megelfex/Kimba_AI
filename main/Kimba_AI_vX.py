@@ -26,7 +26,7 @@ def main():
     memory = KimbaMemory("memory/kimba_memory/")
 
     # 🔤 Initialize LLM interface
-    llm = KimbaLLM(model=identity['version'], mode="auto")
+    llm = KimbaLLM(model=identity['identity']['version'], mode="auto")
 
     # 🎨 Launch visual interface
     launch_gui(llm, memory, identity)
