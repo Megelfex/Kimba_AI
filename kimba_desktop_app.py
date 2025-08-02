@@ -1,43 +1,30 @@
-"""
-Kimba Desktop App - Vollintegration
-===================================
-- Startet ComfyUI automatisch, falls nicht aktiv
-- Nutzt nur ein lokales Hauptmodell (LLM) + GPT/Claude-Fallback
-- Erkennt automatisch Bildanfragen und wählt passendes Bildmodell
-- Zeigt generierte Bilder direkt im Chat an
-"""
-
 import sys
 import logging
 import subprocess
 import socket
 import time
+import psutil
 from pathlib import Path
-from PyQt6.QtWidgets import ( 
+from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QTextEdit, QLineEdit, QPushButton, QComboBox, QLabel
 )
-
-# Kimba Core
 from core.llm_router import KimbaLLMRouter
 from modules.image_generator import generate_image_with_comfy
+import os
 
-# Logging
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 
-# --- ComfyUI Auto-Start ---
+
+# -----------------------
+# ComfyUI On-Demand Start
+# -----------------------
+
 def is_port_in_use(port):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         return s.connect_ex(("127.0.0.1", port)) == 0
 
-import os
-
 def find_comfyui_path():
-    """
-    Sucht den ComfyUI-Ordner automatisch:
-    - Prüft zuerst im gleichen Verzeichnis wie Kimba
-    - Falls nicht gefunden, versucht im übergeordneten Ordner
-    """
     base_dir = Path(__file__).resolve().parent
     possible_paths = [
         base_dir / "ComfyUI",
@@ -48,27 +35,39 @@ def find_comfyui_path():
             return str(path)
     return None
 
-
 def start_comfyui():
     comfy_path = find_comfyui_path()
     if not comfy_path:
-        logging.error("❌ Konnte ComfyUI-Ordner nicht finden! Bitte prüfe, ob 'main.py' existiert.")
-        return
+        logging.error("❌ Konnte ComfyUI-Ordner nicht finden!")
+        return None
 
-    if not is_port_in_use(8188):
-        logging.info(f"🚀 Starte ComfyUI aus: {comfy_path}")
-        try:
-            subprocess.Popen(
-                ["python", "main.py", "--cpu"],
-                cwd=comfy_path,
-                shell=True
-            )
-            time.sleep(5)  # Warte, bis ComfyUI hochfährt
-        except Exception as e:
-            logging.error(f"❌ Fehler beim Start von ComfyUI: {e}")
-    else:
+    if is_port_in_use(8188):
         logging.info("✅ ComfyUI läuft bereits.")
+        return None
 
+    logging.info(f"🚀 Starte ComfyUI aus: {comfy_path}")
+    proc = subprocess.Popen(
+        ["python", "main.py", "--cpu"],  # CPU-Modus für weniger VRAM-Verbrauch
+        cwd=comfy_path,
+        shell=True
+    )
+    time.sleep(5)  # kurze Wartezeit zum Hochfahren
+    return proc.pid
+
+def stop_comfyui(pid):
+    if pid is None:
+        return
+    try:
+        proc = psutil.Process(pid)
+        proc.terminate()
+        logging.info("🛑 ComfyUI wurde beendet.")
+    except Exception as e:
+        logging.error(f"Fehler beim Beenden von ComfyUI: {e}")
+
+
+# -----------------------
+# Kimba Desktop App
+# -----------------------
 
 class KimbaApp(QMainWindow):
     def __init__(self):
@@ -76,16 +75,20 @@ class KimbaApp(QMainWindow):
         self.setWindowTitle("Kimba AI - Desktop App")
         self.setGeometry(200, 100, 800, 600)
 
-        # ComfyUI starten
-        start_comfyui()
+        # LLM Router starten
+        self.router = KimbaLLMRouter(
+            use_api=False,
+            api_choice="gpt"
+        )
 
-        # Router für LLM & API
-        self.router = KimbaLLMRouter()
+        if self.router.use_api:
+            print(f"[INFO] 🌐 Starte Kimba mit API-Modus ({self.router.api_choice.upper()})")
+        else:
+            print(f"[INFO] 💻 Starte Kimba lokal mit Modell: {self.router.model_paths['core']}")
+
         self.current_purpose = "core"
-
-        # Modelle: Nur LLM + Bildmodelle aus ComfyUI
         self.llm_models = ["core", "gpt", "claude"]
-        self.image_models = [m.stem for m in Path("ComfyUI/models/checkpoints").glob("*.safetensors")]
+        self.image_models = [m.name for m in Path("ComfyUI/models/checkpoints").glob("*.safetensors")]
 
         self._build_ui()
 
@@ -150,22 +153,12 @@ class KimbaApp(QMainWindow):
             self.api_button.setStyleSheet("background-color: red; color: white;")
         self.add_message("System", f"API-Modus ist jetzt {'aktiv' if self.router.use_api else 'inaktiv'}.")
 
-    def send_message(self):
-        user_text = self.input_field.text().strip()
-        if not user_text:
-            return
-
-        self.add_message("You", user_text)
-        self.input_field.clear()
-
-# --- Auto-Erkennung für Bild-Generierung mit dynamischer Modellauswahl ---
-    def get_checkpoint_for_task(task_description):
+    def get_checkpoint_for_task(self, task_description):
         ckpt_dir = Path("ComfyUI/models/checkpoints")
         files = [f.name for f in ckpt_dir.glob("*.safetensors")] + [f.name for f in ckpt_dir.glob("*.ckpt")]
         if not files:
             return None
 
-        # Schlüsselwort → bevorzugtes Modell (falls vorhanden)
         style_map = {
             "ghibli": "ghibli-diffusion-v1.ckpt",
             "anime": "anime-style.safetensors",
@@ -182,25 +175,23 @@ class KimbaApp(QMainWindow):
             if keyword in task_lower and model_name in files:
                 return model_name
 
-        # Fallback: erstes verfügbares Modell
         preferred = "dreamshaper_8.safetensors"
         return preferred if preferred in files else files[0]
 
-        if any(kw in user_text.lower() for kw in ["erstelle ein bild", "male", "zeichne", "generiere bild", "render", "create image", "draw", "generate picture"]):
-            selected_model = get_checkpoint_for_task(user_text)
-            if selected_model:
-                self.add_message("System", f"🎨 Erkenne Bildanfrage – benutze Modell: {selected_model}")
-                result_path = generate_image_with_comfy(
-                    user_text,
-                    model_name=selected_model,
-                    workflow_path="default_workflow.json"
-            )
-                self.add_image_message("Kimba", result_path)
-                return
-            else:
-                self.add_message("System", "❌ Kein passendes Bildmodell gefunden.")
-                return
+    def send_message(self):
+        user_text = self.input_field.text().strip()
+        if not user_text:
+            return
 
+        self.add_message("You", user_text)
+        self.input_field.clear()
+
+        # --- On-Demand ComfyUI bei Bildanfragen ---
+        if any(kw in user_text.lower() for kw in [
+            "erstelle ein bild", "male", "zeichne", "generiere bild", "render", "create image", "draw", "generate picture"
+        ]):
+            pid = start_comfyui()
+            selected_model = self.get_checkpoint_for_task(user_text)
             if selected_model:
                 self.add_message("System", f"🎨 Erkenne Bildanfrage – benutze Modell: {selected_model}")
                 result_path = generate_image_with_comfy(
@@ -209,10 +200,9 @@ class KimbaApp(QMainWindow):
                     workflow_path="default_workflow.json"
                 )
                 self.add_image_message("Kimba", result_path)
-                return
-            else:
-                self.add_message("System", "❌ Kein passendes Bildmodell gefunden.")
-                return
+            if pid:
+                stop_comfyui(pid)
+            return
 
         # --- Normales LLM/API-Handling ---
         response = self.router.ask(user_text, purpose=self.current_purpose)
