@@ -24,6 +24,18 @@ from desktop_kimba.kimba_desktop_cat import AnimatedCat
 # Logging
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 
+def load_sprite_with_fallback(path):
+    """
+    Lädt ein Sprite oder erstellt einen Platzhalter, falls es fehlt.
+    """
+    import pygame
+    import os
+    if not os.path.exists(path):
+        print(f"[WARNUNG] Sprite nicht gefunden: {path} – verwende Platzhalter.")
+        placeholder = pygame.Surface((50, 50))
+        placeholder.fill((200, 200, 200))
+        return placeholder
+    return pygame.image.load(path)
 
 def main(start_triggers=True, start_cat=False):
     """DE: Startet Kimba mit GUI, Triggern und optional Desktop-Katze.

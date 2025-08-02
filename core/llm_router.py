@@ -1,161 +1,123 @@
-"""
-Kimba LLM Router - Clean Fixed Version
-======================================
-DE: Verwaltet den Zugriff auf lokale und API-basierte Sprachmodelle.
-    Standardmäßig werden lokale Modelle genutzt, API-Modelle nur bei Bedarf.
-
-EN: Manages access to local and API-based language models.
-    Local models are used by default, API models only when explicitly requested.
-"""
-
 import os
-import logging
-from pathlib import Path
 from llama_cpp import Llama
 
-# API-Clients nur importieren, wenn gebraucht / Only import API clients if needed
-try:
-    from openai import OpenAI
-    import anthropic
-except ImportError:
-    OpenAI = None
-    anthropic = None
-
-# Logging-Konfiguration
-logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
-
-
 class KimbaLLMRouter:
-    """
-    DE: Router für verschiedene LLM-Modelle (lokal oder API).
-    EN: Router for various LLM models (local or API).
-    """
+    def __init__(self, use_api=False, api_choice=None):
+        """
+        Router für verschiedene LLMs (lokal oder API).
+        DE: Steuert, ob lokale Modelle oder APIs wie GPT/Claude genutzt werden.
+        """
+        # API Settings
+        self.use_api = use_api
+        self.api_choice = api_choice
+        self.openai_client = None
+        self.claude_client = None
 
-    def __init__(self, use_api=False, api_choice="gpt"):
-        # Modellpfade
+        # Modellpfade definieren
         self.model_paths = {
-            "core": "models/llm/general/openhermes-2.5-mistral-7b.Q5_K_M.gguf",
-            "creative": "models/llm/creative/mythomax-l2-13b.Q5_K_M.gguf",
-            "code": "models/llm/code/deepseek-coder-6.7b-base.Q5_K_M.gguf",
-            "empathy": "models/llm/empathy/dolphin-2.7-mixtral-8x7b.Q5_K_M.gguf",
-            "multimodal": "models/llm/multimodal/Q5_K_M-00001-of-00003.gguf"
+            "core": "models/llm/general/tinyllama-1.1b-chat-v1.0.Q5_K_M.gguf",
+            "creative": "models/llm/general/tinyllama-1.1b-chat-v1.0.Q5_K_M.gguf",
+            "code": "models/llm/general/tinyllama-1.1b-chat-v1.0.Q5_K_M.gguf",
+            "empathy": "models/llm/general/tinyllama-1.1b-chat-v1.0.Q5_K_M.gguf",
+            "multimodal": "models/llm/general/tinyllama-1.1b-chat-v1.0.Q5_K_M.gguf"
         }
 
         self.models = {}
-        self.use_api = use_api
-        self.api_choice = api_choice
 
-        # API-Clients nur erstellen, wenn nötig
-        self.gpt_client = None
-        self.claude_client = None
-
+        # Falls API aktiv ist, initialisieren
         if self.use_api:
             self._init_api_clients()
 
     def _init_api_clients(self):
-        """
-        DE: Initialisiert API-Clients nur, wenn API-Modus aktiv ist.
-        EN: Initializes API clients only if API mode is active.
-        """
+        """Initialisiert API-Clients für GPT oder Claude."""
         if self.api_choice == "gpt":
-            api_key = os.getenv("OPENAI_API_KEY")
-            if not api_key:
-                logging.warning("⚠ Kein OPENAI_API_KEY gefunden, wechsle zu lokalem Modus.")
-                self.use_api = False
-                return
-            self.gpt_client = OpenAI(api_key=api_key)
-            logging.info("✅ GPT API-Client initialisiert.")
-
+            try:
+                import openai
+                self.openai_client = openai
+                self.openai_client.api_key = os.getenv("OPENAI_API_KEY")
+                print("[INFO] GPT API-Client initialisiert.")
+            except ImportError:
+                print("[ERROR] openai-Paket nicht installiert.")
         elif self.api_choice == "claude":
-            api_key = os.getenv("ANTHROPIC_API_KEY")
-            if not api_key:
-                logging.warning("⚠ Kein ANTHROPIC_API_KEY gefunden, wechsle zu lokalem Modus.")
-                self.use_api = False
-                return
-            self.claude_client = anthropic.Anthropic(api_key=api_key)
-            logging.info("✅ Claude API-Client initialisiert.")
+            try:
+                import anthropic
+                self.claude_client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+                print("[INFO] Claude API-Client initialisiert.")
+            except ImportError:
+                print("[ERROR] anthropic-Paket nicht installiert.")
 
-    def load_model(self, purpose: str):
-        path = self.model_paths.get(purpose, self.model_paths["core"])
+    def load_model(self, purpose):
+        """Lädt ein Modell für den angegebenen Zweck."""
+        if purpose not in self.model_paths:
+            raise ValueError(f"[ERROR] Kein Modellpfad für Zweck '{purpose}' definiert.")
 
-    # Prüfen, ob Pfad existiert
+        path = self.model_paths[purpose]
+
         if not os.path.exists(path):
-            logging.warning(f"⚠ Modell-Datei fehlt: {path}")
+            print(f"[ERROR] Modellpfad existiert nicht: {path}")
             return None
 
         try:
-            if path not in self.models:
-                logging.info(f"🧠 Lade Modell: {path}")
-                self.models[path] = Llama(
-                    model_path=path,
-                    n_ctx=2048,
-                    n_threads=6,
-                    n_gpu_layers=0,  # GPU deaktiviert für Stabilität
-                    verbose=False
-            )
+            print(f"[INFO] 🧠 Lade Modell: {path}")
+            self.models[path] = Llama(model_path=path, n_ctx=4096, n_threads=8)
             return self.models[path]
         except Exception as e:
-            logging.error(f"❌ Fehler beim Laden {path}: {e}")
+            print(f"[ERROR] ❌ Fehler beim Laden {path}: {e}")
             return None
 
-
-    def ask(self, prompt: str, purpose: str = "core") -> str:
-        """Stellt dem passenden Modell eine Frage / Sends a prompt to the appropriate model."""
+    def ask(self, prompt, purpose="core", max_tokens=512):
+        """Fragt ein Modell oder API an."""
+        # API-Modus
         if self.use_api:
-            return self.ask_api(prompt)
+            return self.ask_api(prompt, purpose)
 
-        model = self.load_model(purpose)
+        # Lokaler Modus
+        model = self.models.get(self.model_paths[purpose])
         if model is None:
-            # Versuch API-Fallback
-            if self.openai_client or self.claude_client:
-                logging.warning("⚠ Lokales Modell fehlgeschlagen → API-Fallback aktiviert.")
-                self.use_api = True
-                return self.ask_api(prompt)
-            else:
-                return "❌ Konnte lokales Modell nicht laden und kein API-Key vorhanden."
+            model = self.load_model(purpose)
+            if model is None:
+                return "[ERROR] Modell konnte nicht geladen werden."
 
-        try:
-            output = model(prompt, max_tokens=512)
-            return output.get("choices", [{}])[0].get("text", "").strip()
-        except Exception as e:
-        logging.error(f"❌ Fehler bei der Textgenerierung: {e}")
-        return "❌ Fehler bei der Textgenerierung."
+        output = model(prompt, max_tokens=max_tokens)
+        return output["choices"][0]["text"]
 
-    def ask_api(self, prompt: str) -> str:
-        """
-        DE: Nutzt API-Modelle (GPT oder Claude).
-        EN: Uses API models (GPT or Claude).
-        """
-        if self.api_choice == "gpt" and self.gpt_client:
-            response = self.gpt_client.chat.completions.create(
-                model="gpt-4",
-                messages=[{"role": "user", "content": prompt}]
+    def ask_api(self, prompt, purpose="core"):
+        """Stellt eine Anfrage an GPT oder Claude API."""
+        if self.api_choice == "gpt" and self.openai_client:
+            resp = self.openai_client.ChatCompletion.create(
+                model="gpt-4o-mini",
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=512
             )
-            return response.choices[0].message.content.strip()
+            return resp.choices[0].message["content"]
 
         elif self.api_choice == "claude" and self.claude_client:
-            response = self.claude_client.messages.create(
+            resp = self.claude_client.messages.create(
                 model="claude-3-opus-20240229",
                 max_tokens=512,
                 messages=[{"role": "user", "content": prompt}]
             )
-            return response.content[0].text.strip()
+            return resp.content[0].text
 
         else:
-            logging.warning("⚠ API-Client nicht initialisiert, wechsle zu lokalem Modus.")
-            self.use_api = False
-            return self.ask(prompt)
+            return "[ERROR] Keine API-Client-Initialisierung gefunden."
 
     def list_llm_models(self):
-        """
-        DE: Gibt eine Liste der verfügbaren LLM-Modelle zurück.
-        EN: Returns a list of available LLM models.
-        """
-        return list(self.model_paths.keys())
+        """Listet alle verfügbaren LLM-Modelle im Ordner models/llm."""
+        models_dir = "models/llm"
+        all_models = []
+        for root, dirs, files in os.walk(models_dir):
+            for f in files:
+                if f.endswith(".gguf"):
+                    all_models.append(os.path.join(root, f))
+        return all_models
 
     def list_image_models(self):
-        """
-        DE: Gibt eine Liste der verfügbaren Bildmodelle zurück.
-        EN: Returns a list of available image models.
-        """
-        return ["sd_xl_base_1.0", "sd_xl_refiner_1.0"]
+        """Listet alle verfügbaren Bildmodelle im Ordner models/image."""
+        models_dir = "models/image"
+        all_models = []
+        for root, dirs, files in os.walk(models_dir):
+            for f in files:
+                if f.endswith(".safetensors"):
+                    all_models.append(os.path.join(root, f))
+        return all_models

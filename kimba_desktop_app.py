@@ -13,7 +13,7 @@ import subprocess
 import socket
 import time
 from pathlib import Path
-from PyQt6.QtWidgets import (
+from PyQt6.QtWidgets import ( 
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QTextEdit, QLineEdit, QPushButton, QComboBox, QLabel
 )
@@ -59,7 +59,7 @@ def start_comfyui():
         logging.info(f"🚀 Starte ComfyUI aus: {comfy_path}")
         try:
             subprocess.Popen(
-                ["python", "main.py"],
+                ["python", "main.py", "--cpu"],
                 cwd=comfy_path,
                 shell=True
             )
@@ -158,27 +158,48 @@ class KimbaApp(QMainWindow):
         self.add_message("You", user_text)
         self.input_field.clear()
 
-        # --- Auto-Erkennung für Bild-Generierung ---
-        image_keywords = ["erstelle ein bild", "male", "zeichne", "generiere bild", "render", "create image", "draw", "generate picture"]
+# --- Auto-Erkennung für Bild-Generierung mit dynamischer Modellauswahl ---
+    def get_checkpoint_for_task(task_description):
+        ckpt_dir = Path("ComfyUI/models/checkpoints")
+        files = [f.name for f in ckpt_dir.glob("*.safetensors")] + [f.name for f in ckpt_dir.glob("*.ckpt")]
+        if not files:
+            return None
 
-        style_to_model = {
-            "ghibli": "ghibli-style",
-            "anime": "anime-style",
-            "realistisch": "realistic-style",
-            "cyberpunk": "cyberpunk-style",
-            "pixel": "pixel-art",
-            "fantasy": "fantasy-style"
+        # Schlüsselwort → bevorzugtes Modell (falls vorhanden)
+        style_map = {
+            "ghibli": "ghibli-diffusion-v1.ckpt",
+            "anime": "anime-style.safetensors",
+            "realistisch": "realisticVisionV60B1_v60B1VAE.safetensors",
+            "realistic": "realisticVisionV60B1_v60B1VAE.safetensors",
+            "foto": "Juggernaut-XL_v9_RunDiffusionPhoto_v2.safetensors",
+            "photo": "Juggernaut-XL_v9_RunDiffusionPhoto_v2.safetensors",
+            "flux": "flux1-dev.safetensors",
+            "sd3": "sd3_medium_incl_clips_t5xxlfp8.safetensors"
         }
 
-        if any(kw in user_text.lower() for kw in image_keywords):
-            selected_model = None
-            for style, model_name in style_to_model.items():
-                if style in user_text.lower() and model_name in self.image_models:
-                    selected_model = model_name
-                    break
+        task_lower = task_description.lower()
+        for keyword, model_name in style_map.items():
+            if keyword in task_lower and model_name in files:
+                return model_name
 
-            if not selected_model and self.image_models:
-                selected_model = self.image_models[0]
+        # Fallback: erstes verfügbares Modell
+        preferred = "dreamshaper_8.safetensors"
+        return preferred if preferred in files else files[0]
+
+        if any(kw in user_text.lower() for kw in ["erstelle ein bild", "male", "zeichne", "generiere bild", "render", "create image", "draw", "generate picture"]):
+            selected_model = get_checkpoint_for_task(user_text)
+            if selected_model:
+                self.add_message("System", f"🎨 Erkenne Bildanfrage – benutze Modell: {selected_model}")
+                result_path = generate_image_with_comfy(
+                    user_text,
+                    model_name=selected_model,
+                    workflow_path="default_workflow.json"
+            )
+                self.add_image_message("Kimba", result_path)
+                return
+            else:
+                self.add_message("System", "❌ Kein passendes Bildmodell gefunden.")
+                return
 
             if selected_model:
                 self.add_message("System", f"🎨 Erkenne Bildanfrage – benutze Modell: {selected_model}")

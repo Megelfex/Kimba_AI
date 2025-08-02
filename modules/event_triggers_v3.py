@@ -49,7 +49,7 @@ class DesktopEventHandler(FileSystemEventHandler):
         if not event.is_directory:
             filename = os.path.basename(event.src_path)
             kimba_say(f"Neue Datei entdeckt: {filename}", mood="neugierig")
-            kimba_organize(DESKTOP_PATH)
+            run_file_organizer(DESKTOP_PATH)
 
     def on_modified(self, event):
         if not event.is_directory:
@@ -64,6 +64,24 @@ def monitor_desktop():
     observer.start()
     return observer
 
+def start_desktop_watcher():
+    """
+    Startet die Überwachung des Desktop-Ordners und die Idle-Überprüfung.
+    DE: Führt monitor_desktop() aus und prüft regelmäßig Nutzer-Inaktivität.
+    """
+    print("[INFO] Desktop watcher gestartet...")
+    desktop_observer = monitor_desktop()
+
+    try:
+        while True:
+            check_idle_with_context()
+            time.sleep(5)
+    except KeyboardInterrupt:
+        logging.info("Stopping desktop watcher...")
+        desktop_observer.stop()
+        desktop_observer.join()
+
+
 if __name__ == "__main__":
     print("🔄 Kimba Trigger-System v3 gestartet.")
     desktop_observer = monitor_desktop()
@@ -74,9 +92,9 @@ if __name__ == "__main__":
             time.sleep(5)
     except KeyboardInterrupt:
         logging.info("Stopping desktop watcher...")
-        observer.stop()
-    observer.join()
+        desktop_observer.stop()
+        desktop_observer.join()
 
 
 if __name__ == "__main__":
-    start_desktop_watcher()
+    monitor_desktop()

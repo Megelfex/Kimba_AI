@@ -1,87 +1,56 @@
-
-"""
-Kimba Desktop Cat
-=================
-DE: Ein animiertes Desktop-Haustier, das auf der aktuellen Stimmung basiert.
-    Liest die Stimmung aus einer JSON-Datei und passt den angezeigten Sprite an.
-
-EN: An animated desktop pet that reacts to the current mood.
-    Reads mood from a JSON file and updates the displayed sprite accordingly.
-"""
-
-import tkinter as tk
-from PIL import Image, ImageTk
 import os
-import json
-import time
-import threading
+import pygame
 
-SPRITE_FOLDER = "sprites"
-STATE_FILE = "desktop_kimba/kimba_state.json"
-MOOD_TO_SPRITE = {
-    "ruhig": "kimba_ruhig.png",
-    "verspielt": "kimba_verspielt.png",
-    "neugierig": "kimba_neugierig.png",
-    "müde": "kimba_nachdenklich.png",
-    "fokussiert": "kimba_fokussiert.png",
-    "default": "kimba_ruhig.png"
-}
-
-
-class AnimatedCat(tk.Tk):
-    def __init__(self):
+class AnimatedCat:
+    def __init__(self, sprite_path, position):
         """
-        EN: Initializes the transparent window and starts the mood update loop.
-        DE: Initialisiert das transparente Fenster und startet die Stimmungsaktualisierungsschleife.
+        Initialisiert die Desktop-Katze.
+        DE: Lädt Sprite oder Platzhalter, falls Sprite fehlt.
         """
-        super().__init__()
-        self.overrideredirect(True)  # Kein Rahmen / No window border
-        self.wm_attributes("-topmost", True)
-        self.wm_attributes("-transparentcolor", "white")
-        self.configure(bg="white")
-        self.geometry("+1000+800")
+        self.position = position
+        self.sprite = self.load_sprite(sprite_path)
 
-        self.label = tk.Label(self, bg="white")
-        self.label.pack()
+    def load_sprite(self, path):
+        """
+        Lädt das Sprite-Bild oder verwendet ein Platzhalterbild,
+        falls die Datei nicht existiert.
+        """
+        if not os.path.exists(path):
+            print(f"[WARNUNG] Sprite nicht gefunden: {path} – verwende Platzhalter.")
+            # Platzhalter erstellen (50x50 Pixel, grau)
+            placeholder = pygame.Surface((50, 50))
+            placeholder.fill((200, 200, 200))
+            return placeholder
+        else:
+            return pygame.image.load(path)
 
-        self.running = True
-        self.current_sprite = None
+    def run(self):
+        """
+        Startet die Katze als eigenständiges Pygame-Fenster.
+        """
+        pygame.init()
+        screen = pygame.display.set_mode((200, 200))
+        pygame.display.set_caption("Kimba Desktop Cat")
+        clock = pygame.time.Clock()
 
-        threading.Thread(target=self.update_loop).start()
+        running = True
+        while running:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
 
-    def update_loop(self):
-        while self.running:
-            mood = self.read_mood()
-            sprite_file = MOOD_TO_SPRITE.get(mood, MOOD_TO_SPRITE["default"])
-            sprite_path = os.path.join(SPRITE_FOLDER, sprite_file)
-            if os.path.exists(sprite_path) and sprite_path != self.current_sprite:
-                self.show_sprite(sprite_path)
-                self.current_sprite = sprite_path
-            time.sleep(2)
+            screen.fill((255, 255, 255))
+            screen.blit(self.sprite, self.position)
+            pygame.display.flip()
+            clock.tick(30)
 
-    def read_mood(self):
-        if not os.path.exists(STATE_FILE):
-            logging.warning(f"Stimmungsdatei nicht gefunden / Mood file not found: {STATE_FILE}")
-            return "default"
-        try:
-            with open(STATE_FILE, "r", encoding="utf-8") as f:
-                data = json.load(f)
-                return data.get("mood", "default")
-        except:
-            return "default"
-
-    def show_sprite(self, path):
-        try:
-            img = Image.open(path)
-            img = img.convert("RGBA")
-            img = img.resize((100, 100), Image.LANCZOS)
-            tk_img = ImageTk.PhotoImage(img)
-            self.label.config(image=tk_img)
-            self.label.image = tk_img
-            self.current_sprite = sprite_path
-            logging.info(f"Sprite geändert zu / Sprite changed to: {sprite_file}")
+        pygame.quit()
 
 
 if __name__ == "__main__":
-    app = AnimatedCat()
-    app.mainloop()
+    print("[INFO] Starte Desktop-Katze im Testmodus...")
+    try:
+        cat = AnimatedCat("sprites/cat_idle.gif", (100, 100))
+        cat.run()
+    except Exception as e:
+        print(f"[ERROR] Katze konnte nicht gestartet werden: {e}")
