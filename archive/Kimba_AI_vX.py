@@ -4,7 +4,7 @@
 import os
 import sys
 from visual.interface import launch_gui
-from core.llm_router import KimbaLLM
+from archive.llm_router import KimbaLLM
 from core.memory_store import KimbaMemory
 from identity.identity_engine import load_identity
 

@@ -1,0 +1,19 @@
+.title {
+    text-align: center;
+    color: #f2eecb;
+    background: #5a8f7b;
+    padding: 1;
+}
+
+#chatbox {
+    height: 20;
+    background: #2e3d36;
+    color: #f2eecb;
+    padding: 1;
+    overflow-y: scroll;
+}
+
+#user_input {
+    background: #3b5249;
+    color: #ffffff;
+}

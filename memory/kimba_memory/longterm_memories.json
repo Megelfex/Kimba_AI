@@ -168,5 +168,149 @@
       "kommunikation",
       "antwort"
     ]
+  },
+  {
+    "timestamp": "2025-07-31T21:01:26.407875",
+    "content": "Ich habe gesehen, dass du an desktop.ini gearbeitet hast.",
+    "mood": "aufmerksam",
+    "category": "general",
+    "tags": [
+      "communication"
+    ]
+  },
+  {
+    "timestamp": "2025-07-31T21:14:45.432005",
+    "content": "Du bist ruhig geworden...",
+    "mood": "müde",
+    "category": "general",
+    "tags": [
+      "communication"
+    ]
+  },
+  {
+    "timestamp": "2025-07-31T21:19:52.301000",
+    "content": "Du bist ruhig geworden...",
+    "mood": "müde",
+    "category": "general",
+    "tags": [
+      "communication"
+    ]
+  },
+  {
+    "timestamp": "2025-07-31T21:20:00.102809",
+    "content": "Ich habe gesehen, dass du an event_swipe_app - Verknüpfung.lnk gearbeitet hast.",
+    "mood": "aufmerksam",
+    "category": "general",
+    "tags": [
+      "communication"
+    ]
+  },
+  {
+    "timestamp": "2025-07-31T21:20:00.229362",
+    "content": "Ich habe gesehen, dass du an Visual Studio Code.lnk gearbeitet hast.",
+    "mood": "aufmerksam",
+    "category": "general",
+    "tags": [
+      "communication"
+    ]
+  },
+  {
+    "timestamp": "2025-07-31T21:20:00.252398",
+    "content": "Ich habe gesehen, dass du an Wallpaper Engine.url gearbeitet hast.",
+    "mood": "aufmerksam",
+    "category": "general",
+    "tags": [
+      "communication"
+    ]
+  },
+  {
+    "timestamp": "2025-07-31T21:20:00.276346",
+    "content": "Ich habe gesehen, dass du an Chillquarium.url gearbeitet hast.",
+    "mood": "aufmerksam",
+    "category": "general",
+    "tags": [
+      "communication"
+    ]
+  },
+  {
+    "timestamp": "2025-07-31T21:20:00.294186",
+    "content": "Ich habe gesehen, dass du an CurseForge.lnk gearbeitet hast.",
+    "mood": "aufmerksam",
+    "category": "general",
+    "tags": [
+      "communication"
+    ]
+  },
+  {
+    "timestamp": "2025-07-31T21:20:00.310144",
+    "content": "Ich habe gesehen, dass du an Discord.lnk gearbeitet hast.",
+    "mood": "aufmerksam",
+    "category": "general",
+    "tags": [
+      "communication"
+    ]
+  },
+  {
+    "timestamp": "2025-07-31T21:20:00.326283",
+    "content": "Ich habe gesehen, dass du an Fortnite.url gearbeitet hast.",
+    "mood": "aufmerksam",
+    "category": "general",
+    "tags": [
+      "communication"
+    ]
+  },
+  {
+    "timestamp": "2025-07-31T21:20:00.342118",
+    "content": "Ich habe gesehen, dass du an GitHub Desktop.lnk gearbeitet hast.",
+    "mood": "aufmerksam",
+    "category": "general",
+    "tags": [
+      "communication"
+    ]
+  },
+  {
+    "timestamp": "2025-07-31T21:20:00.358021",
+    "content": "Ich habe gesehen, dass du an Last Epoch.url gearbeitet hast.",
+    "mood": "aufmerksam",
+    "category": "general",
+    "tags": [
+      "communication"
+    ]
+  },
+  {
+    "timestamp": "2025-07-31T21:20:00.374233",
+    "content": "Ich habe gesehen, dass du an PokeMMO.lnk gearbeitet hast.",
+    "mood": "aufmerksam",
+    "category": "general",
+    "tags": [
+      "communication"
+    ]
+  },
+  {
+    "timestamp": "2025-07-31T21:20:00.398056",
+    "content": "Ich habe gesehen, dass du an Riot Client.lnk gearbeitet hast.",
+    "mood": "aufmerksam",
+    "category": "general",
+    "tags": [
+      "communication"
+    ]
+  },
+  {
+    "timestamp": "2025-07-31T21:20:00.415064",
+    "content": "Ich habe gesehen, dass du an balenaEtcher.lnk gearbeitet hast.",
+    "mood": "aufmerksam",
+    "category": "general",
+    "tags": [
+      "communication"
+    ]
+  },
+  {
+    "timestamp": "2025-07-31T22:25:14.898327",
+    "content": "Ich habe gesehen, dass du an desktop.ini gearbeitet hast.",
+    "mood": "aufmerksam",
+    "category": "general",
+    "tags": [
+      "communication"
+    ]
   }
 ]

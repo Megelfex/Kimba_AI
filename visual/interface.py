@@ -1,31 +1,33 @@
-import gradio as gr
-import asyncio
-from core.llm_router import KimbaLLMRouter
-from visual.kimba_terminal_ui import launch_terminal_ui
+"""
+Kimba Interface Launcher
+========================
+DE: Startet die verschiedenen Oberflächen von Kimba (GUI oder Terminal).
+EN: Launches the different Kimba interfaces (GUI or Terminal).
+"""
 
-llm = KimbaLLMRouter()
+import logging
+from visual.kimba_terminal_ui import KimbaTerminalUI  # Clean-Version importieren
 
-# Diese Funktion ist vollständig kompatibel mit type="messages"
-def chat(messages: list):
-    last_user_msg = messages[-1]["content"]
-    reply = llm.ask(last_user_msg)
-    return messages + [{"role": "assistant", "content": reply}]
+# Logging-Konfiguration
+logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 
 
 def launch_gui():
-    # Starte Terminal-UI parallel (optional)
-    asyncio.get_event_loop().run_in_executor(None, launch_terminal_ui, lambda x: llm.ask(x))
+    """
+    DE: Startet die GUI von Kimba.
+    EN: Launches Kimba's GUI.
+    """
+    logging.info("🚀 GUI-Start wurde angefordert, aber GUI-Code ist hier noch nicht implementiert.")
+    logging.info("📌 Hinweis: Falls eine Gradio- oder andere Web-Oberfläche gewünscht ist, muss diese hier eingebunden werden.")
+    # Beispiel:
+    # import gradio as gr
+    # gr.Interface(fn=..., inputs=..., outputs=...).launch()
 
-    # Starte Gradio Chat UI
-    iface = gr.ChatInterface(
-    fn=chat,
-    type="messages",  # wichtig!
-    title="Kimba vX",
-    description="Dein digitaler Soulmate im Terminal & Browser.",
-    theme="soft",
-)
 
-    iface.launch(share=False)
-
-if __name__ == "__main__":
-    launch_gui()
+def launch_terminal_ui():
+    """
+    DE: Startet die Terminal-Oberfläche (Textual) von Kimba.
+    EN: Launches Kimba's terminal interface (Textual).
+    """
+    logging.info("🖥 Starting Terminal UI...")
+    KimbaTerminalUI().run()

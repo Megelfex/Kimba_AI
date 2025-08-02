@@ -1,3 +1,15 @@
+
+"""
+Kimba Core
+==========
+DE: Zentrale Steuerung der Kimba-KI. Hier werden Interaktionen, Automatisierungen, 
+    Systemzustände und Stimmungsanpassungen koordiniert.
+
+EN: Central control of the Kimba AI. Coordinates interactions, automations, 
+    system states, and mood adjustments.
+"""
+
+import logging
 import threading
 from desktop_kimba.mood_engine import get_current_mood
 from core.longterm_memory import save_memory_entry
@@ -5,88 +17,76 @@ from modules.response_style import respond
 from desktop_kimba.desktop_kimba_mood_sync import update_desktop_cat_mood
 from modules.file_organizer import organize_folder
 from modules.git_assistant import get_git_status
-from modules.code_assistant import enter_code_assistant
+from modules.code_assistant import enter_code_assistant 
 
-# ======================================================
-# 🧠 Kimba Core – Central control & interaction interface
-# ======================================================
-# EN: Main control functions for handling interactions, automations, and system states.
-# DE: Zentrale Steuerfunktionen für Interaktionen, Automatisierungen und Systemzustände.
-# ======================================================
+# Logging-Konfiguration / Logging configuration
+logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 
-def kimba_say(message, mood=None, store=True):
+
+def kimba_say(message: str, mood: str = None, store: bool = True):
     """
-    EN: Makes Kimba respond to a message based on the current mood and optionally saves it to memory.
-    DE: Lässt Kimba auf eine Nachricht reagieren, basierend auf der aktuellen Stimmung, und speichert sie optional im Gedächtnis.
+    DE: Lässt Kimba auf eine Nachricht reagieren, basierend auf der aktuellen Stimmung.
+        Optional wird die Interaktion im Langzeitgedächtnis gespeichert.
+    EN: Makes Kimba respond to a message based on the current mood.
+        Optionally stores the interaction in long-term memory.
 
     Args:
-        message (str): The user message or prompt.
-        mood (str, optional): Current mood. If None, it will be auto-detected.
-        store (bool): Whether to store this interaction in long-term memory.
+        message (str): Die Nutzernachricht / User message.
+        mood (str, optional): Stimmung, wenn None -> automatisch ermittelt.
+        store (bool): Ob die Interaktion gespeichert werden soll.
     """
     mood = mood or get_current_mood()
     response = respond(mood)
-    print(f"Kimba ({mood}): {response}")
+    logging.info(f"Kimba ({mood}): {response}")
+
     if store:
-        save_memory_entry(message, mood=mood, tags=["kommunikation", "antwort"])
+        save_memory_entry(message, mood=mood, tags=["communication"])
+
+    return response
+
+
+def sync_mood_with_desktop():
+    """
+    DE: Synchronisiert Kimbas Stimmung mit der Desktop-Katze.
+    EN: Syncs Kimba's mood with the desktop cat.
+    """
+    mood = get_current_mood()
+    logging.info(f"Synchronizing mood to desktop cat: {mood}")
     update_desktop_cat_mood(mood)
 
 
-def kimba_organize(path):
+def run_file_organizer(path: str):
     """
-    EN: Triggers Kimba's file organization tool for the given folder path.
-    DE: Startet Kimbas Dateiorganisator für den angegebenen Ordnerpfad.
-
-    Args:
-        path (str): Absolute or relative folder path to organize.
+    DE: Organisiert einen angegebenen Ordner automatisch.
+    EN: Automatically organizes a given folder.
     """
-    print("📁 Kimba organisiert Dateien...")
+    logging.info(f"Organizing folder: {path}")
     organize_folder(path)
 
 
-def kimba_git_check():
+def check_git_status(repo_path: str):
     """
-    EN: Checks and prints the current Git status of the project directory.
-    DE: Überprüft und zeigt den aktuellen Git-Status des Projektverzeichnisses an.
+    DE: Überprüft den Git-Status eines Projekts.
+    EN: Checks the Git status of a project.
     """
-    print("🧩 Git Status:")
-    print(get_git_status())
+    logging.info(f"Checking Git status for: {repo_path}")
+    return get_git_status(repo_path)
 
 
-def kimba_code_scan():
+def start_code_assistant():
     """
-    EN: Launches Kimba’s code assistant to analyze and process code-related tasks.
-    DE: Startet Kimbas Code-Assistenten zur Analyse und Verarbeitung von Code-Aufgaben.
+    DE: Startet den Code-Assistenten in einem eigenen Thread.
+    EN: Starts the code assistant in a separate thread.
     """
-    print("🧪 Kimba analysiert deinen Code...")
-    enter_code_assistant()
+    logging.info("Starting code assistant...")
+    threading.Thread(target=enter_code_assistant, daemon=True).start()
 
 
-def kimba_wake():
+def run_core_cycle():
     """
-    EN: Simulates Kimba waking up – updates mood and sends a greeting.
-    DE: Simuliert Kimbas Erwachen – aktualisiert die Stimmung und sendet eine Begrüßung.
+    DE: Führt einen zentralen Steuerzyklus aus (Beispiel: Automatisierungen, Mood-Sync).
+    EN: Runs a central control cycle (example: automations, mood sync).
     """
-    print("🌞 Kimba erwacht...")
-    mood = get_current_mood()
-    update_desktop_cat_mood(mood)
-    kimba_say("Ich bin wach!", mood=mood, store=False)
-
-
-def start_core():
-    """
-    EN: Initializes the Kimba core system and triggers startup actions (e.g., mood sync, background checks).
-    DE: Initialisiert das Kimba-Core-System und startet zugehörige Prozesse (z. B. Stimmungssync, Hintergrundchecks).
-    """
-    print("🎮 Kimba Core ist aktiv.")
-    kimba_wake()
-
-    # EN: Start a background thread to check Git status
-    # DE: Starte einen Hintergrund-Thread zur Git-Statusprüfung
-    threading.Thread(target=kimba_git_check).start()
-
-
-# EN: Optional direct start when run as main script
-# DE: Optionaler Direktstart bei direktem Skriptaufruf
-if __name__ == "__main__":
-    start_core()
+    logging.info("Running core cycle...")
+    sync_mood_with_desktop()
+    # Weitere Automatisierungen könnten hier hinzugefügt werden / More automations can be added here

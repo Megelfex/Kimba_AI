@@ -12,7 +12,7 @@ class KimbaTaskEngine:
 from modules.image_generation import comfy_engine, sd_engine
 from modules import response_style
 
-from core.llm_router import KimbaLLMRouter
+from archive.llm_router import KimbaLLMRouter
 
 llm = KimbaLLMRouter()
 
