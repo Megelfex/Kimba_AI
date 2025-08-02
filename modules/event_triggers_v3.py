@@ -19,8 +19,7 @@ from core.kimba_core import kimba_say, run_file_organizer
 # Logging-Konfiguration / Logging configuration
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 
-# Konfiguration / Configuration
-IDLE_THRESHOLD = 300  # 5 Minuten / 5 minutes
+IDLE_THRESHOLD = 300  # Sekunden (5 Minuten)
 DESKTOP_PATH = os.path.join(os.path.expanduser("~"), "Desktop")
 
 # Zeitstempel der letzten Aktivität / Timestamp of last activity
@@ -28,12 +27,6 @@ last_active_time = time.time()
 
 
 def check_idle_with_context():
-    """
-    DE: Prüft, ob der Nutzer länger als IDLE_THRESHOLD inaktiv war (keine Mausbewegung).
-        Falls ja, reagiert Kimba mit einer müden Nachricht.
-    EN: Checks if the user has been idle longer than IDLE_THRESHOLD (no mouse movement).
-        If so, Kimba reacts with a tired message.
-    """
     global last_active_time
     idle_duration = time.time() - last_active_time
 
@@ -52,38 +45,28 @@ def check_idle_with_context():
 
 
 class DesktopEventHandler(FileSystemEventHandler):
-    """
-    DE: Überwacht den Desktop-Ordner auf Dateiveränderungen und reagiert darauf.
-    EN: Watches the desktop folder for file changes and triggers reactions.
-    """
-
     def on_created(self, event):
-        logging.info(f"📄 Neue Datei erstellt / New file created: {event.src_path}")
-        kimba_say(f"Ich habe gesehen, dass du eine neue Datei erstellt hast: {os.path.basename(event.src_path)}", mood="neugierig")
-
-    def on_deleted(self, event):
-        logging.info(f"🗑️ Datei gelöscht / File deleted: {event.src_path}")
-        kimba_say(f"Du hast gerade eine Datei gelöscht: {os.path.basename(event.src_path)}", mood="neutral")
+        if not event.is_directory:
+            filename = os.path.basename(event.src_path)
+            kimba_say(f"Neue Datei entdeckt: {filename}", mood="neugierig")
+            kimba_organize(DESKTOP_PATH)
 
     def on_modified(self, event):
-        logging.info(f"✏️ Datei geändert / File modified: {event.src_path}")
-        kimba_say(f"Ich habe gesehen, dass du an {os.path.basename(event.src_path)} gearbeitet hast.", mood="aufmerksam")
+        if not event.is_directory:
+            filename = os.path.basename(event.src_path)
+            kimba_say(f"Datei bearbeitet: {filename}", mood="fokussiert")
 
-    def on_moved(self, event):
-        logging.info(f"📂 Datei verschoben / File moved: {event.src_path} -> {event.dest_path}")
-        kimba_say(f"Du hast eine Datei verschoben: {os.path.basename(event.dest_path)}", mood="neutral")
-
-
-def start_desktop_watcher():
-    """
-    DE: Startet die Überwachung des Desktop-Ordners in einem eigenen Thread.
-    EN: Starts monitoring the desktop folder in a separate thread.
-    """
-    logging.info("Starting desktop folder watcher...")
+def monitor_desktop():
+    observer = Observer()
     event_handler = DesktopEventHandler()
     observer = Observer()
     observer.schedule(event_handler, DESKTOP_PATH, recursive=False)
     observer.start()
+    return observer
+
+if __name__ == "__main__":
+    print("🔄 Kimba Trigger-System v3 gestartet.")
+    desktop_observer = monitor_desktop()
 
     try:
         while True:
