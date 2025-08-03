@@ -1,17 +1,18 @@
 import sys
+import threading
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout,
     QHBoxLayout, QPushButton, QTextEdit, QLineEdit, QLabel
 )
-from PyQt6.QtCore import Qt
-from datetime import datetime, timedelta
+from PyQt6.QtCore import Qt, pyqtSignal
+from datetime import datetime
 from core.llm_router import KimbaLLMRouter
 
 # Avatar-Bilder
 IUNO_AVATAR = "./assets/iuno_avatar.png"
 USER_AVATAR = "./assets/user_avatar.png"
 
-# Individuelle Reset-Tage (1 = 1. des Monats, 5 = 5. des Monats, etc.)
+# Individuelle Reset-Tage pro API
 API_RESET_DAYS = {
     "HuggingFace": 5,
     "DeepInfra": 10,
@@ -19,6 +20,9 @@ API_RESET_DAYS = {
 }
 
 class KimbaApp(QMainWindow):
+    response_ready = pyqtSignal(str, str)  # Antwort, Quelle
+    system_message_ready = pyqtSignal(str) # System- oder Debug-Text
+
     def __init__(self, router):
         super().__init__()
         self.setWindowTitle("Kimba AI - Iuno v1")
@@ -26,6 +30,11 @@ class KimbaApp(QMainWindow):
         self.setStyleSheet("background-color: #121212; color: white; font-family: Arial;")
 
         self.router = router
+        self.api_mode = 1  # 0 = nur lokal, 1 = lokal+API, 2 = nur API
+
+        # Signals verbinden
+        self.response_ready.connect(self.on_response_received)
+        self.system_message_ready.connect(self.append_system_message)
 
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
@@ -33,8 +42,8 @@ class KimbaApp(QMainWindow):
 
         # ----- Info-Bar -----
         info_bar = QHBoxLayout()
-        self.api_toggle = QPushButton("API Mode: AUTO")
-        self.api_toggle.setEnabled(False)
+        self.api_toggle = QPushButton(self.get_api_mode_label())
+        self.api_toggle.clicked.connect(self.toggle_api_mode)
         self.api_toggle.setStyleSheet("""
             QPushButton {
                 background-color: #1f1f1f;
@@ -68,7 +77,7 @@ class KimbaApp(QMainWindow):
         """)
         layout.addWidget(self.chat_display)
 
-        # ----- Eingabezeile -----
+        # ----- Eingabefeld -----
         input_layout = QHBoxLayout()
         self.input_field = QLineEdit()
         self.input_field.setPlaceholderText("Schreibe hier an Iuno...")
@@ -96,17 +105,24 @@ class KimbaApp(QMainWindow):
         input_layout.addWidget(self.send_button)
         layout.addLayout(input_layout)
 
-        self.append_system_message("✅ Iuno geladen! API-Fallback aktiv.")
+        self.append_system_message("✅ Iuno geladen!")
         self.update_token_display()
 
+    # ---------------- API-Mode-Umschalter ----------------
+    def get_api_mode_label(self):
+        return f"API Mode: {['Nur Lokal', 'Lokal + API', 'Nur API'][self.api_mode]}"
+
+    def toggle_api_mode(self):
+        self.api_mode = (self.api_mode + 1) % 3
+        self.api_toggle.setText(self.get_api_mode_label())
+
+    # ---------------- Token-Reset-Berechnung ----------------
     def days_until_reset(self, reset_day: int) -> int:
         today = datetime.today()
         this_month_reset = datetime(today.year, today.month, reset_day)
-
         if today < this_month_reset:
             return (this_month_reset - today).days
         else:
-            # Nächster Monat
             next_month = today.month + 1 if today.month < 12 else 1
             year = today.year if today.month < 12 else today.year + 1
             next_reset = datetime(year, next_month, reset_day)
@@ -114,30 +130,26 @@ class KimbaApp(QMainWindow):
 
     def update_token_display(self):
         usage_texts = []
-
         for api in self.router.api_chain:
             name = api["name"]
             used = self.router.api_usage.get(name, 0)
             limit = api["limit"]
             reset_day = API_RESET_DAYS.get(name, 1)
             days_left = self.days_until_reset(reset_day)
-
             percent = (used / limit) * 100 if limit > 0 else 0
             color = "green"
             if percent >= 80:
                 color = "red"
             elif percent >= 50:
                 color = "orange"
-
             usage_texts.append(
                 f"<span style='color:{color}'>{name}: {used}/{limit} Tokens</span> "
                 f"<span style='color:gray'>(Reset in {days_left} Tagen)</span>"
             )
-
         model_info = f"<span style='color:cyan;'>Modell: {self.router.hf_model_id}</span>"
         self.token_label.setText(" | ".join(usage_texts) + " | " + model_info)
 
-    # -------- Chatblasen mit Avataren --------
+    # ---------------- Chatblasen ----------------
     def append_user_message(self, text):
         bubble_html = f"""
         <div style="text-align: right; margin: 8px;">
@@ -180,21 +192,31 @@ class KimbaApp(QMainWindow):
     def append_system_message(self, text):
         self.chat_display.append(f"<p style='color:gray; font-size:12px;'><i>{text}</i></p>")
 
-    # -------- Senden & Empfangen --------
+    # ---------------- Threaded Send mit Signals ----------------
     def send_message(self):
         user_text = self.input_field.text().strip()
         if not user_text:
             return
-
         self.append_user_message(user_text)
         self.input_field.clear()
+        self.system_message_ready.emit("💭 Iuno denkt nach...")
 
-        try:
-            response, source = self.router.ask(user_text, return_source=True)
-        except Exception as e:
-            response = f"[Fehler: {str(e)}]"
-            source = "ERROR"
+        def worker():
+            try:
+                if self.api_mode == 0:
+                    response, source = self.router.ask_local(user_text), "LOCAL"
+                elif self.api_mode == 1:
+                    response, source = self.router.ask(user_text, return_source=True)
+                else:
+                    response, source = self.router.ask_api(user_text), "API"
+            except Exception as e:
+                response, source = f"[Fehler: {str(e)}]", "ERROR"
 
+            self.response_ready.emit(response, source)
+
+        threading.Thread(target=worker, daemon=True).start()
+
+    def on_response_received(self, response, source):
         self.append_system_message(f"DEBUG: Antwortquelle: {source}")
         self.append_iuno_message(response)
         self.update_token_display()
@@ -203,7 +225,6 @@ if __name__ == "__main__":
     print("[INFO] 🧠 Lade Iuno...")
     router = KimbaLLMRouter(model_choice="qwen-3b-fp16")
     router.load_model()
-
     app = QApplication(sys.argv)
     window = KimbaApp(router)
     window.show()
