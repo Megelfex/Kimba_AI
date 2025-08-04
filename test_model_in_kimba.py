@@ -1,21 +1,23 @@
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import os
 
-model_id = "Qwen/Qwen2.5-3B-Instruct"
-save_dir = "./models/Qwen2.5-3B-Instruct-FP16"
+# Modell-ID von HuggingFace
+model_id = "microsoft/Phi-3-mini-4k-instruct"
+# Speicherort lokal
+save_dir = "./models/Phi-3-mini-4k-instruct"
 
-print(f"[INFO] 📥 Lade Modell {model_id} (FP16) und speichere nach {save_dir}...")
+print(f"[INFO] 📥 Lade Modell {model_id} und speichere nach {save_dir}...")
 os.makedirs(save_dir, exist_ok=True)
 
 # Tokenizer laden & speichern
 tokenizer = AutoTokenizer.from_pretrained(model_id, trust_remote_code=True)
 tokenizer.save_pretrained(save_dir)
 
-# Modell (FP16) laden & speichern
+# Modell laden & speichern (automatische FP16/BF16 je nach GPU)
 model = AutoModelForCausalLM.from_pretrained(
     model_id,
-    torch_dtype="auto",       # FP16 oder BF16, je nach GPU
-    device_map="auto",        # nutzt automatisch deine RX 6700 XT
+    torch_dtype="auto",
+    device_map="auto",
     trust_remote_code=True
 )
 model.save_pretrained(save_dir)
