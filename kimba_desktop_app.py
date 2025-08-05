@@ -12,6 +12,7 @@ from datetime import datetime
 from core.llm_router import KimbaLLMRouter
 from core.image_router import KimbaImageRouter
 from core import vision
+from core.persona_manager import PersonaManager
 from core.longterm_memory import add_memory
 from core.memory_filter import is_relevant_message
 from core.auto_start import start_all_background_services
@@ -51,7 +52,10 @@ class KimbaApp(QMainWindow):
         self.setGeometry(200, 100, 900, 650)
         self.setStyleSheet("background-color: #121212; color: white; font-family: Arial;")
 
+        # 🔹 PersonaManager einbinden
+        self.persona_manager = PersonaManager()
         self.router = router
+
         self.image_router = KimbaImageRouter()
         self.vision_handler = vision.KimbaVision(vision_api="gpt4o", api_key=None)
 
@@ -79,6 +83,11 @@ class KimbaApp(QMainWindow):
         self.vision_toggle = QPushButton("Vision-Modus: AUS")
         self.vision_toggle.clicked.connect(self.toggle_vision_mode)
         info_bar.addWidget(self.vision_toggle)
+
+        # 🔹 Label für aktive Persona
+        self.persona_label = QLabel(f"Aktive Persona: {self.persona_manager.get_active_prompt()[:30]}...")
+        self.persona_label.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        info_bar.addWidget(self.persona_label)
 
         self.token_label = QLabel()
         self.token_label.setAlignment(Qt.AlignmentFlag.AlignRight)
@@ -183,6 +192,18 @@ class KimbaApp(QMainWindow):
     def send_message(self):
         user_text = self.input_field.text().strip()
         if not user_text:
+            return
+
+        # 🔹 Persona-Wechsel per Chatbefehl
+        if user_text.startswith("!persona "):
+            persona_name = user_text.replace("!persona ", "").strip()
+            try:
+                msg = self.persona_manager.switch_persona(persona_name)
+                self.persona_label.setText(f"Aktive Persona: {persona_name}")
+                self.append_system_message(msg)
+            except ValueError as e:
+                self.append_system_message(str(e))
+            self.input_field.clear()
             return
 
         # Nutzeraktivität registrieren (für Idle/Mood-System)

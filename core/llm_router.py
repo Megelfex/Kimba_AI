@@ -1,17 +1,19 @@
-# core/llm_router.py
 import os
 import requests
 from dotenv import load_dotenv
 from transformers import AutoModelForCausalLM, AutoTokenizer
-from core.persona import generate_persona_prompt
-from core.persona_api import generate_persona_prompt as generate_persona_prompt_api
 from core.longterm_memory import semantic_search
+from core.persona_manager import PersonaManager
 
 # Lade .env Datei
 load_dotenv()
 
 class KimbaLLMRouter:
     def __init__(self, model_choice="Phi-3-mini-4k-instruct"):
+        # Persona Manager initialisieren
+        self.persona_manager = PersonaManager()
+
+        # Lokale Modell-Infos
         self.model_map = {
             "Phi-3-mini-4k-instruct": {
                 "local_dir": "./models/Phi-3-mini-4k-instruct",
@@ -57,6 +59,9 @@ class KimbaLLMRouter:
         self.local_model = None
         self.tokenizer = None
 
+    # ---------------------------------------------------
+    # Lokales Modell laden
+    # ---------------------------------------------------
     def load_model(self):
         print(f"[INFO] 📥 Lade lokales Modell: {self.local_dir}")
         self.tokenizer = AutoTokenizer.from_pretrained(self.local_dir, trust_remote_code=True)
@@ -67,8 +72,12 @@ class KimbaLLMRouter:
             trust_remote_code=True
         )
 
+    # ---------------------------------------------------
+    # Lokale Anfrage
+    # ---------------------------------------------------
     def ask_local(self, prompt, max_tokens=512):
-        full_prompt = generate_persona_prompt() + "\n" + prompt
+        persona_prompt = self.persona_manager.get_active_prompt()
+        full_prompt = persona_prompt + "\n" + prompt
         inputs = self.tokenizer(full_prompt, return_tensors="pt").to(self.local_model.device)
         outputs = self.local_model.generate(
             **inputs,
@@ -78,9 +87,12 @@ class KimbaLLMRouter:
         )
         return self.tokenizer.decode(outputs[0], skip_special_tokens=True)
 
+    # ---------------------------------------------------
+    # API-Anfrage
+    # ---------------------------------------------------
     def ask_api(self, prompt, max_tokens=512):
-        short_persona = generate_persona_prompt_api()
-        api_prompt = short_persona + "\n" + prompt
+        persona_prompt = self.persona_manager.get_active_prompt()
+        api_prompt = persona_prompt + "\n" + prompt
 
         for api in self.api_chain:
             if not api["token"]:
@@ -93,7 +105,7 @@ class KimbaLLMRouter:
                 payload = {
                     "model": api["model"],
                     "messages": [
-                        {"role": "system", "content": short_persona},
+                        {"role": "system", "content": persona_prompt},
                         {"role": "user", "content": prompt}
                     ],
                     "max_tokens": max_tokens
@@ -114,23 +126,25 @@ class KimbaLLMRouter:
                 print(f"[WARN] API {api['name']} Exception: {e}")
         return None
 
+    # ---------------------------------------------------
+    # API-First mit Local-Fallback + Erinnerungskontext
+    # ---------------------------------------------------
     def ask(self, prompt, return_source=False):
-        # 🔍 Semantische Suche
+        # 🔍 Semantische Suche für Erinnerungen
         memory_hits = []
         results = semantic_search(prompt, limit=3)
         for sim, _, ts, content, mood, category, tags in results:
             memory_hits.append(f"- {content} ({category}, Relevanz: {sim:.2f})")
 
-        # Kontext einfügen
         if memory_hits:
             prompt = f"[Erinnerungen]\n" + "\n".join(memory_hits) + f"\n\n[Nutzer]\n{prompt}"
 
-        # API-First
+        # 1️⃣ API-First
         api_response = self.ask_api(prompt)
         if api_response:
             return (api_response, "API") if return_source else api_response
 
-        # Local-Fallback
+        # 2️⃣ Lokales Modell als Fallback
         print("[INFO] 🌙 Alle APIs fehlgeschlagen – wechsle zu lokalem Modell...")
         if self.local_model is None:
             self.load_model()
