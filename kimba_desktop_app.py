@@ -1,5 +1,8 @@
 import sys
 import threading
+import subprocess
+import socket
+import os
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QPushButton, QTextEdit, QLineEdit, QLabel
@@ -9,7 +12,15 @@ from datetime import datetime
 from core.llm_router import KimbaLLMRouter
 from core.image_router import KimbaImageRouter
 from core import vision
-
+from core.longterm_memory import add_memory
+from core.memory_filter import is_relevant_message
+from core.auto_start import start_all_background_services
+from core.auto_overlay_mood import register_user_activity
+from core.live_vision import (
+    start_live_vision_in_background,
+    stop_live_vision,
+    set_reaction_callback
+)
 
 # API Reset-Tage
 API_RESET_DAYS = {
@@ -19,6 +30,16 @@ API_RESET_DAYS = {
     "OpenRouter": 1
 }
 
+def categorize_message(user_input: str):
+    """Kategorisiert die Nachricht für Speicher- und Trigger-Logik."""
+    text_lower = user_input.lower()
+    if any(word in text_lower for word in ["mache", "baue", "erstelle", "füge hinzu", "implementiere"]):
+        return "task", ["entwicklung"]
+    if any(word in text_lower for word in ["ja", "okay", "mach das", "bestätige", "genehmige"]):
+        return "decision", ["approval"]
+    if any(word in text_lower for word in ["nein", "nicht machen", "abbrechen", "stop"]):
+        return "decision", ["rejected"]
+    return "general", ["notiz"]
 
 class KimbaApp(QMainWindow):
     response_ready = pyqtSignal(str, str)
@@ -26,16 +47,13 @@ class KimbaApp(QMainWindow):
 
     def __init__(self, router):
         super().__init__()
-        self.setWindowTitle("Kimba AI - Iuno v1")
+        self.setWindowTitle("Kimba AI - Iuno v1 + Kimba Katze")
         self.setGeometry(200, 100, 900, 650)
         self.setStyleSheet("background-color: #121212; color: white; font-family: Arial;")
 
         self.router = router
         self.image_router = KimbaImageRouter()
-        self.vision_handler = vision.KimbaVision(
-            vision_api="gpt4o",
-            api_key=None
-        )
+        self.vision_handler = vision.KimbaVision(vision_api="gpt4o", api_key=None)
 
         self.api_mode = 1
         self.image_mode = False
@@ -65,7 +83,6 @@ class KimbaApp(QMainWindow):
         self.token_label = QLabel()
         self.token_label.setAlignment(Qt.AlignmentFlag.AlignRight)
         info_bar.addWidget(self.token_label)
-
         layout.addLayout(info_bar)
 
         # Chatfenster
@@ -83,12 +100,29 @@ class KimbaApp(QMainWindow):
         input_layout.addWidget(self.send_button)
         layout.addLayout(input_layout)
 
-        self.append_system_message("✅ Iuno geladen!")
+        # Startmeldung
+        self.append_system_message("✅ Iuno und Kimba Katze geladen!")
         self.update_token_display()
 
-    # =====================
-    #   MODUS TOGGLES
-    # =====================
+        # 🎯 Hintergrunddienste starten
+        self.append_system_message("✅ Starte Hintergrunddienste...")
+        start_all_background_services()
+
+        # 🎯 Live-Vision Callback setzen
+        set_reaction_callback(self.display_live_vision_reaction)
+
+        # 🎯 Beide Overlays starten
+        threading.Thread(target=self.start_overlay_client, args=("iuno",), daemon=True).start()
+        threading.Thread(target=self.start_overlay_client, args=("kimba",), daemon=True).start()
+
+    def start_overlay_client(self, character):
+        """Startet einen Overlay-Client für einen bestimmten Charakter."""
+        overlay_path = os.path.join(os.path.dirname(__file__), "..", "overlay_client", "overlay_client.py")
+        if os.path.exists(overlay_path):
+            subprocess.Popen([sys.executable, overlay_path, character])
+        else:
+            print(f"[WARN] Overlay-Client nicht gefunden unter: {overlay_path}")
+
     def get_api_mode_label(self):
         return f"API Mode: {['Nur Lokal', 'Lokal + API', 'Nur API'][self.api_mode]}"
 
@@ -102,11 +136,12 @@ class KimbaApp(QMainWindow):
 
     def toggle_vision_mode(self):
         self.vision_mode = not self.vision_mode
+        if self.vision_mode:
+            start_live_vision_in_background()
+        else:
+            stop_live_vision()
         self.vision_toggle.setText("Vision-Modus: AN" if self.vision_mode else "Vision-Modus: AUS")
 
-    # =====================
-    #   TOKEN-ANZEIGE
-    # =====================
     def days_until_reset(self, reset_day: int) -> int:
         today = datetime.today()
         this_month_reset = datetime(today.year, today.month, reset_day)
@@ -132,9 +167,6 @@ class KimbaApp(QMainWindow):
             )
         self.token_label.setText(" | ".join(usage_texts))
 
-    # =====================
-    #   CHAT
-    # =====================
     def append_user_message(self, text):
         self.chat_display.append(f"<p style='color:#ff4d4d;'><b>Du:</b> {text}</p>")
 
@@ -144,43 +176,97 @@ class KimbaApp(QMainWindow):
     def append_system_message(self, text):
         self.chat_display.append(f"<p style='color:gray; font-size:12px;'><i>{text}</i></p>")
 
-    # =====================
-    #   NACHRICHT SENDEN
-    # =====================
+    def display_live_vision_reaction(self, text):
+        """Zeigt Live-Vision-Reaktionen direkt im Chatfenster."""
+        self.append_iuno_message(text)
+
     def send_message(self):
         user_text = self.input_field.text().strip()
         if not user_text:
             return
+
+        # Nutzeraktivität registrieren (für Idle/Mood-System)
+        register_user_activity()
+
+        # Langzeitgedächtnis speichern
+        if is_relevant_message(user_text):
+            category, tags = categorize_message(user_text)
+            add_memory(content=user_text, category=category, tags=tags)
+
+        # Chat anzeigen
         self.append_user_message(user_text)
         self.input_field.clear()
-
         self.system_message_ready.emit("💭 Iuno denkt nach...")
+
+        # Animationstrigger setzen
+        self.trigger_animations(user_text)
 
         def worker():
             try:
                 if self.api_mode == 0:
-                    # Nur lokal
                     response, source = self.router.ask_local(user_text), "LOCAL"
                 elif self.api_mode == 1:
-                    # API-Kette mit Fallback lokal
                     response, source = self.router.ask(user_text, return_source=True)
                 else:
-                    # Nur API
-                    response, source = self.router.ask_api(user_text, return_source=True)
+                    response = self.router.ask_api(user_text)
+                    source = "API"
             except Exception as e:
                 response, source = f"[Fehler: {str(e)}]", "ERROR"
             self.response_ready.emit(response, source)
 
         threading.Thread(target=worker, daemon=True).start()
 
+    def trigger_animations(self, user_text):
+        """Einfache Regel-Engine für beide Charaktere."""
+        text_lower = user_text.lower()
+
+        # Iuno reagiert auf Gespräch
+        if "hallo" in text_lower or "hi" in text_lower:
+            self.set_character_mood("iuno", "happy")
+        elif "traurig" in text_lower:
+            self.set_character_mood("iuno", "sad")
+        else:
+            self.set_character_mood("iuno", "speak")
+
+        # Kimba Katze reagiert unabhängig
+        if "streichel" in text_lower:
+            self.set_character_mood("kimba", "happy")
+        elif "schlaf" in text_lower:
+            self.set_character_mood("kimba", "sleep")
+        elif "böse" in text_lower:
+            self.set_character_mood("kimba", "angry")
+        else:
+            self.set_character_mood("kimba", "idle")
+
+    def set_character_mood(self, character, animation):
+        """Setzt Animation und speichert sie ins Gedächtnis."""
+        self.send_overlay_command(character, animation)
+        add_memory(
+            content=f"{character} Animation geändert auf {animation}",
+            mood=animation,
+            category="mood",
+            tags=[character]
+        )
+
+    def send_overlay_command(self, character, animation):
+        """Schickt einen Animationswechsel an den Overlay-Client."""
+        port = 5001 if character == "iuno" else 5002
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.connect(("127.0.0.1", port))
+            s.sendall(animation.encode())
+            s.close()
+            print(f"[Overlay-Command] {character} → {animation}")
+        except ConnectionRefusedError:
+            print(f"[WARN] Kein Overlay für {character} aktiv.")
+
     def on_response_received(self, response, source):
         self.append_system_message(f"DEBUG: Antwortquelle: {source}")
         self.append_iuno_message(response)
         self.update_token_display()
 
-
 if __name__ == "__main__":
-    print("[INFO] 🧠 Lade Iuno...")
+    print("[INFO] 🧠 Lade Iuno und Kimba Katze...")
     router = KimbaLLMRouter(model_choice="Phi-3-mini-4k-instruct")
     app = QApplication(sys.argv)
     window = KimbaApp(router)

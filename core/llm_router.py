@@ -1,9 +1,14 @@
 # core/llm_router.py
 import os
 import requests
+from dotenv import load_dotenv
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from core.persona import generate_persona_prompt
-from core.persona_api import generate_persona_prompt as generate_persona_prompt_api  # gekürzte Version für API
+from core.persona_api import generate_persona_prompt as generate_persona_prompt_api
+from core.longterm_memory import semantic_search
+
+# Lade .env Datei
+load_dotenv()
 
 class KimbaLLMRouter:
     def __init__(self, model_choice="Phi-3-mini-4k-instruct"):
@@ -16,6 +21,7 @@ class KimbaLLMRouter:
         self.local_dir = self.model_map[model_choice]["local_dir"]
         self.hf_model_id = self.model_map[model_choice]["hf_id"]
 
+        # API-Kette mit Token aus .env
         self.api_chain = [
             {
                 "name": "OpenAI GPT",
@@ -41,14 +47,13 @@ class KimbaLLMRouter:
             {
                 "name": "HuggingFace",
                 "url": "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.3",
-                "token": os.getenv("HF_API_KEY"),
+                "token": os.getenv("HUGGINGFACE_API_KEY"),
                 "model": None,
                 "limit": 1_000_000
             }
         ]
 
         self.api_usage = {api["name"]: 0 for api in self.api_chain}
-
         self.local_model = None
         self.tokenizer = None
 
@@ -82,13 +87,15 @@ class KimbaLLMRouter:
                 continue
 
             headers = {"Authorization": f"Bearer {api['token']}"}
-            payload = {}
             if api["name"] == "HuggingFace":
                 payload = {"inputs": api_prompt, "parameters": {"max_new_tokens": max_tokens}}
             else:
                 payload = {
                     "model": api["model"],
-                    "messages": [{"role": "system", "content": short_persona}, {"role": "user", "content": prompt}],
+                    "messages": [
+                        {"role": "system", "content": short_persona},
+                        {"role": "user", "content": prompt}
+                    ],
                     "max_tokens": max_tokens
                 }
 
@@ -105,15 +112,27 @@ class KimbaLLMRouter:
                     print(f"[WARN] API {api['name']} Fehler: {r.status_code}")
             except Exception as e:
                 print(f"[WARN] API {api['name']} Exception: {e}")
-
         return None
 
     def ask(self, prompt, return_source=False):
-        # 1. Versuche API-Kette
+        # 🔍 Semantische Suche
+        memory_hits = []
+        results = semantic_search(prompt, limit=3)
+        for sim, _, ts, content, mood, category, tags in results:
+            memory_hits.append(f"- {content} ({category}, Relevanz: {sim:.2f})")
+
+        # Kontext einfügen
+        if memory_hits:
+            prompt = f"[Erinnerungen]\n" + "\n".join(memory_hits) + f"\n\n[Nutzer]\n{prompt}"
+
+        # API-First
         api_response = self.ask_api(prompt)
         if api_response:
             return (api_response, "API") if return_source else api_response
 
-        # 2. Fallback: Lokales Modell
+        # Local-Fallback
+        print("[INFO] 🌙 Alle APIs fehlgeschlagen – wechsle zu lokalem Modell...")
+        if self.local_model is None:
+            self.load_model()
         local_response = self.ask_local(prompt)
         return (local_response, "LOCAL") if return_source else local_response
