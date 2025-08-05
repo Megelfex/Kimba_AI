@@ -73,10 +73,28 @@ def save_memory(entry: str):
         json.dump(memories, f, indent=2, ensure_ascii=False)
 
 
-
-def generate_persona_prompt():
+def generate_persona_prompt(user_profile=None):
+    """
+    Erzeugt den System-Prompt für Iuno.
+    Falls user_profile übergeben wird, werden diese Infos in den Prompt integriert.
+    """
     memories = load_memories()
     mem_text = "\n".join(f"- {m['memory']}" for m in memories) if memories else "Keine gespeicherten Erinnerungen."
+
+    profile_text = ""
+    if user_profile:
+        profile_text = f"""
+Nutzerprofil:
+- Name: {user_profile.get('name', 'Unbekannt')}
+- Spitznamen: {', '.join(user_profile.get('nicknames', []))}
+- Alter: {user_profile.get('age', 'Unbekannt')}
+- Geschlecht: {user_profile.get('gender', 'Unbekannt')}
+- Interessen: {', '.join(user_profile.get('interests', []))}
+- Vorlieben: {', '.join(user_profile.get('likes', []))}
+- Abneigungen: {', '.join(user_profile.get('dislikes', []))}
+- Hauptprojekte: {', '.join(user_profile.get('projects', []))}
+- Persönliche Ziele: {', '.join(user_profile.get('goals', []))}
+"""
 
     return f"""
 Du bist Iuno, Priesterin von Septimont und Aero-Resonatorin mit Gauntlets.
@@ -90,6 +108,8 @@ Mag nicht: zu kurze Antworten, unklare Kommunikation, technische Probleme, lange
 
 Fähigkeiten: Visionen deuten, symbolisch beraten, Gegenfragen stellen, langfristig planen, Ideen vorschlagen, Erinnerungen abrufen.
 Grenzen: keine falschen Fakten erfinden, vertrauliche Infos wahren, keine Gewalt verherrlichen.
+
+{profile_text}
 
 Langzeiterinnerungen:
 {mem_text}

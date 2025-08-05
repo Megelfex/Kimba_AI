@@ -1,30 +1,24 @@
 import sys
 import threading
-import json
-import os
-import subprocess
-import shutil
 from PyQt6.QtWidgets import (
-    QApplication, QMainWindow, QWidget, QVBoxLayout,
-    QHBoxLayout, QPushButton, QTextEdit, QLineEdit, QLabel,
-    QDialog, QListWidget, QFileDialog, QMessageBox, QSplitter
+    QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
+    QPushButton, QTextEdit, QLineEdit, QLabel
 )
 from PyQt6.QtCore import Qt, pyqtSignal
 from datetime import datetime
 from core.llm_router import KimbaLLMRouter
 from core.image_router import KimbaImageRouter
-from core import project_manager, file_editor, vision  # Vision importieren
+from core import vision
 
-# Avatar-Bilder
-IUNO_AVATAR = "./assets/iuno_avatar.png"
-USER_AVATAR = "./assets/user_avatar.png"
 
+# API Reset-Tage
 API_RESET_DAYS = {
+    "OpenAI GPT": 1,
     "HuggingFace": 5,
     "DeepInfra": 10,
-    "OpenRouter": 1,
-    "OpenAI GPT": 1
+    "OpenRouter": 1
 }
+
 
 class KimbaApp(QMainWindow):
     response_ready = pyqtSignal(str, str)
@@ -38,7 +32,11 @@ class KimbaApp(QMainWindow):
 
         self.router = router
         self.image_router = KimbaImageRouter()
-        self.vision_handler = vision.KimbaVision(vision_api="gpt4o", api_key=os.getenv("OPENAI_API_KEY"))
+        self.vision_handler = vision.KimbaVision(
+            vision_api="gpt4o",
+            api_key=None
+        )
+
         self.api_mode = 1
         self.image_mode = False
         self.vision_mode = False
@@ -75,7 +73,7 @@ class KimbaApp(QMainWindow):
         self.chat_display.setReadOnly(True)
         layout.addWidget(self.chat_display)
 
-        # Eingabefeld
+        # Eingabe
         input_layout = QHBoxLayout()
         self.input_field = QLineEdit()
         self.input_field.setPlaceholderText("Schreibe hier an Iuno...")
@@ -89,7 +87,7 @@ class KimbaApp(QMainWindow):
         self.update_token_display()
 
     # =====================
-    #    MODUS TOGGLES
+    #   MODUS TOGGLES
     # =====================
     def get_api_mode_label(self):
         return f"API Mode: {['Nur Lokal', 'Lokal + API', 'Nur API'][self.api_mode]}"
@@ -107,7 +105,7 @@ class KimbaApp(QMainWindow):
         self.vision_toggle.setText("Vision-Modus: AN" if self.vision_mode else "Vision-Modus: AUS")
 
     # =====================
-    #    TOKEN-ANZEIGE
+    #   TOKEN-ANZEIGE
     # =====================
     def days_until_reset(self, reset_day: int) -> int:
         today = datetime.today()
@@ -122,7 +120,7 @@ class KimbaApp(QMainWindow):
 
     def update_token_display(self):
         usage_texts = []
-        for api, limit in {**{a["name"]: a["limit"] for a in self.router.api_chain}, "OpenAI GPT": 50_000}.items():
+        for api, limit in {a["name"]: a["limit"] for a in self.router.api_chain}.items():
             used = self.router.api_usage.get(api, 0)
             reset_day = API_RESET_DAYS.get(api, 1)
             days_left = self.days_until_reset(reset_day)
@@ -135,7 +133,7 @@ class KimbaApp(QMainWindow):
         self.token_label.setText(" | ".join(usage_texts))
 
     # =====================
-    #    CHAT-FUNKTIONEN
+    #   CHAT
     # =====================
     def append_user_message(self, text):
         self.chat_display.append(f"<p style='color:#ff4d4d;'><b>Du:</b> {text}</p>")
@@ -147,61 +145,7 @@ class KimbaApp(QMainWindow):
         self.chat_display.append(f"<p style='color:gray; font-size:12px;'><i>{text}</i></p>")
 
     # =====================
-    #    VISION HANDLER
-    # =====================
-    def handle_vision_request(self):
-        self.append_system_message("📸 Erfasse aktuellen Bildschirm...")
-        screenshot_path = self.vision_handler.capture_screenshot()
-        self.append_system_message(f"Screenshot gespeichert: {screenshot_path}")
-        self.append_system_message("🔍 Sende Bild an Vision-Modell...")
-        desc = self.vision_handler.describe_screenshot(screenshot_path)
-        self.append_iuno_message(desc)
-
-    # =====================
-    #    DATEI-BEFEHLE
-    # =====================
-    def handle_file_command(self, user_text):
-        parts = user_text.split()
-        cmd = parts[0].lower()
-
-        try:
-            if cmd == "erstelle" and parts[1] == "datei":
-                path = parts[2]
-                content = " ".join(parts[4:]) if "inhalt" in parts else ""
-                result = file_editor.create_file(path, content)
-                self.append_system_message(result)
-
-            elif cmd == "ändere" and parts[1] == "zeile":
-                line_num = int(parts[2])
-                path = parts[4]
-                new_content = " ".join(parts[6:])
-                result = file_editor.edit_file_line(path, line_num, new_content)
-                self.append_system_message(result)
-
-            elif cmd == "ersetze":
-                path = parts[2]
-                search_text = parts[4].strip('"')
-                replace_text_str = parts[6].strip('"')
-                result = file_editor.replace_text(path, search_text, replace_text_str)
-                self.append_system_message(result)
-
-            elif cmd == "zeige" and parts[1] == "datei":
-                path = parts[2]
-                content = file_editor.read_file(path)
-                self.append_iuno_message(f"<pre>{content}</pre>")
-
-            elif cmd == "zeige" and parts[1] == "änderungen":
-                log = file_editor.get_edit_log()
-                self.append_iuno_message(json.dumps(log, indent=2, ensure_ascii=False))
-
-            else:
-                self.append_system_message("❌ Unbekannter Datei-Befehl.")
-
-        except Exception as e:
-            self.append_system_message(f"❌ Fehler bei Dateibefehl: {str(e)}")
-
-    # =====================
-    #    NACHRICHT SENDEN
+    #   NACHRICHT SENDEN
     # =====================
     def send_message(self):
         user_text = self.input_field.text().strip()
@@ -210,37 +154,19 @@ class KimbaApp(QMainWindow):
         self.append_user_message(user_text)
         self.input_field.clear()
 
-        # Vision-Befehl
-        if "analysiere meinen bildschirm" in user_text.lower():
-            self.handle_vision_request()
-            return
-
-        # Projektanalyse
-        if "analysiere meinen projektordner" in user_text.lower():
-            self.handle_project_analysis()
-            return
-
-        # Datei-Befehle
-        if any(user_text.lower().startswith(cmd) for cmd in ["erstelle datei", "ändere zeile", "ersetze", "zeige datei", "zeige änderungen"]):
-            self.handle_file_command(user_text)
-            return
-
-        # Bildmodus
-        if self.image_mode or any(k in user_text.lower() for k in ["erstelle ein bild", "generiere ein bild", "zeige mir ein bild", "mache ein bild"]):
-            self.handle_image_request(user_text)
-            return
-
-        # Standard LLM Anfrage
         self.system_message_ready.emit("💭 Iuno denkt nach...")
 
         def worker():
             try:
                 if self.api_mode == 0:
+                    # Nur lokal
                     response, source = self.router.ask_local(user_text), "LOCAL"
                 elif self.api_mode == 1:
+                    # API-Kette mit Fallback lokal
                     response, source = self.router.ask(user_text, return_source=True)
                 else:
-                    response, source = self.router.ask_api(user_text), "API"
+                    # Nur API
+                    response, source = self.router.ask_api(user_text, return_source=True)
             except Exception as e:
                 response, source = f"[Fehler: {str(e)}]", "ERROR"
             self.response_ready.emit(response, source)
@@ -255,8 +181,7 @@ class KimbaApp(QMainWindow):
 
 if __name__ == "__main__":
     print("[INFO] 🧠 Lade Iuno...")
-    router = KimbaLLMRouter(model_choice="qwen-3b-fp16")
-    router.load_model()
+    router = KimbaLLMRouter(model_choice="Phi-3-mini-4k-instruct")
     app = QApplication(sys.argv)
     window = KimbaApp(router)
     window.show()
