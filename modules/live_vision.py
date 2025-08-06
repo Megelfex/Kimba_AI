@@ -4,7 +4,7 @@ import pyautogui
 import imagehash
 from PIL import Image
 from datetime import datetime
-from core.vision import KimbaVision
+from modules.vision import KimbaVision
 from core.longterm_memory import add_memory
 from core.llm_router import KimbaLLMRouter
 

@@ -1,6 +1,6 @@
 import os
 from datetime import datetime
-from core.project_analyzer import analyze_report
+from tools.project_analyzer import analyze_report
 from core.longterm_memory import add_memory
 
 class ProposalHandler:

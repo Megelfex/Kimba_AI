@@ -7,7 +7,7 @@ DE: Führt KI-generierte Verbesserungsvorschläge aus, erstellt oder aktualisier
 import os
 from datetime import datetime
 from core.llm_router import KimbaLLMRouter
-from core.file_editor import create_file
+from tools.file_editor import create_file
 from core.longterm_memory import add_memory
 from dotenv import load_dotenv
 

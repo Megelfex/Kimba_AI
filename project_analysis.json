@@ -1,0 +1,932 @@
+{
+  "summary": {
+    "total_files": 167,
+    "total_py_files": 101
+  },
+  "files": [
+    {
+      "path": ".env",
+      "size": 460,
+      "mtime": 1754360386.8377347
+    },
+    {
+      "path": ".gitignore",
+      "size": 1378,
+      "mtime": 1754103758.3634212
+    },
+    {
+      "path": "api_usage.json",
+      "size": 54,
+      "mtime": 1754187301.7730217
+    },
+    {
+      "path": "boot_message.py",
+      "size": 1759,
+      "mtime": 1754103758.6384187
+    },
+    {
+      "path": "default_workflow.json",
+      "size": 1125,
+      "mtime": 1754103758.649685
+    },
+    {
+      "path": "image_usage.json",
+      "size": 33,
+      "mtime": 1754312902.071801
+    },
+    {
+      "path": "project_analysis.json",
+      "size": 24847,
+      "mtime": 1754507119.5075648
+    },
+    {
+      "path": "README.md",
+      "size": 4605,
+      "mtime": 1754497973.3887024
+    },
+    {
+      "path": "requirements_kimba.txt",
+      "size": 510,
+      "mtime": 1754103758.6676874
+    },
+    {
+      "path": "app\\Kimba_AI_v2.py",
+      "size": 5725,
+      "mtime": 1754505858.8232727
+    },
+    {
+      "path": "app\\kimba_desktop_app.py",
+      "size": 12053,
+      "mtime": 1754506397.1436534
+    },
+    {
+      "path": "app\\kimba_startup.py",
+      "size": 2109,
+      "mtime": 1754103758.6562467
+    },
+    {
+      "path": "archive\\event_triggers_v3.py",
+      "size": 3180,
+      "mtime": 1754103758.6367168
+    },
+    {
+      "path": "archive\\legacy_ui\\kimba_terminal_ui.py",
+      "size": 2218,
+      "mtime": 1754103758.6372256
+    },
+    {
+      "path": "archive\\legacy_ui\\kimba_terminal_ui2.py",
+      "size": 7682,
+      "mtime": 1754103758.6384187
+    },
+    {
+      "path": "archive\\legacy_ui\\kimba_terminal_ui3.py",
+      "size": 5208,
+      "mtime": 1754103758.9790328
+    },
+    {
+      "path": "archive\\old_app_versions\\Kimba_AI_vX.py",
+      "size": 1194,
+      "mtime": 1754103758.6358685
+    },
+    {
+      "path": "archive\\old_app_versions\\Kimba_AI_vX3.py",
+      "size": 3331,
+      "mtime": 1754498194.9515724
+    },
+    {
+      "path": "archive\\old_app_versions\\Kimba_AI_vXx.py",
+      "size": 1665,
+      "mtime": 1754103758.6358685
+    },
+    {
+      "path": "archive\\old_app_versions\\Kimba_AI_vX_integrated_clean.py",
+      "size": 3175,
+      "mtime": 1754103758.6341484
+    },
+    {
+      "path": "archive\\old_core\\kimba_core.py",
+      "size": 3553,
+      "mtime": 1754103758.6372256
+    },
+    {
+      "path": "archive\\old_core\\kimba_desktop_cat.py",
+      "size": 3510,
+      "mtime": 1754103758.6372256
+    },
+    {
+      "path": "archive\\old_core\\llm_router.py",
+      "size": 8334,
+      "mtime": 1754103758.6384187
+    },
+    {
+      "path": "archive\\unused_events\\event_triggers_v2.py",
+      "size": 3954,
+      "mtime": 1754103758.661848
+    },
+    {
+      "path": "archive\\unused_personas\\persona_api_unused.py",
+      "size": 1108,
+      "mtime": 1754354265.6804304
+    },
+    {
+      "path": "archive\\unused_personas\\persona_unused.py",
+      "size": 4684,
+      "mtime": 1754346905.737335
+    },
+    {
+      "path": "archive\\unused_personas\\persona_unused2.py",
+      "size": 3964,
+      "mtime": 1754176318.708664
+    },
+    {
+      "path": "core\\auto_executor.py",
+      "size": 2770,
+      "mtime": 1754506548.0059283
+    },
+    {
+      "path": "core\\billing_monitor.py",
+      "size": 1563,
+      "mtime": 1754103758.6435087
+    },
+    {
+      "path": "core\\goal_manager.py",
+      "size": 2275,
+      "mtime": 1754374025.649988
+    },
+    {
+      "path": "core\\kimba_core.py",
+      "size": 3158,
+      "mtime": 1754103758.6435087
+    },
+    {
+      "path": "core\\llm_router.py",
+      "size": 6245,
+      "mtime": 1754506347.007578
+    },
+    {
+      "path": "core\\longterm_memory.py",
+      "size": 5765,
+      "mtime": 1754364453.0817263
+    },
+    {
+      "path": "core\\memory_filter.py",
+      "size": 1037,
+      "mtime": 1754364338.8643742
+    },
+    {
+      "path": "core\\memory_store.py",
+      "size": 1174,
+      "mtime": 1754103758.646001
+    },
+    {
+      "path": "core\\memory_store_v2_linked.py",
+      "size": 4442,
+      "mtime": 1754103758.646001
+    },
+    {
+      "path": "core\\module_loader.py",
+      "size": 1100,
+      "mtime": 1754103758.6468558
+    },
+    {
+      "path": "core\\mood_engine.py",
+      "size": 1933,
+      "mtime": 1754103758.6468558
+    },
+    {
+      "path": "core\\persona_manager.py",
+      "size": 2054,
+      "mtime": 1754388978.7135715
+    },
+    {
+      "path": "core\\project_manager.py",
+      "size": 3674,
+      "mtime": 1754362393.9237702
+    },
+    {
+      "path": "core\\reflection_writer.py",
+      "size": 1375,
+      "mtime": 1754103758.6477122
+    },
+    {
+      "path": "core\\response_style.py",
+      "size": 68,
+      "mtime": 1754103758.6477122
+    },
+    {
+      "path": "core\\self_mod_engine.py",
+      "size": 2536,
+      "mtime": 1754103758.6491826
+    },
+    {
+      "path": "core\\system_identity.py",
+      "size": 1555,
+      "mtime": 1754103758.649685
+    },
+    {
+      "path": "core\\user_profile.py",
+      "size": 3347,
+      "mtime": 1754178517.1757102
+    },
+    {
+      "path": "core\\__init__.py",
+      "size": 0,
+      "mtime": 1754103758.639922
+    },
+    {
+      "path": "core\\personas\\persona_augusta.py",
+      "size": 1041,
+      "mtime": 1754504587.1344578
+    },
+    {
+      "path": "core\\personas\\persona_bella.py",
+      "size": 1641,
+      "mtime": 1754453237.9408095
+    },
+    {
+      "path": "core\\personas\\persona_carlotta.py",
+      "size": 1014,
+      "mtime": 1754388985.2125235
+    },
+    {
+      "path": "core\\personas\\persona_frieren.py",
+      "size": 933,
+      "mtime": 1754388986.4026606
+    },
+    {
+      "path": "core\\personas\\persona_iuno_api.py",
+      "size": 812,
+      "mtime": 1754388979.9873297
+    },
+    {
+      "path": "core\\personas\\persona_iuno_local.py",
+      "size": 1451,
+      "mtime": 1754388976.3670661
+    },
+    {
+      "path": "core\\personas\\persona_kimba_cat.py",
+      "size": 1084,
+      "mtime": 1754388971.2114322
+    },
+    {
+      "path": "core\\personas\\persona_lucy.py",
+      "size": 904,
+      "mtime": 1754388988.791474
+    },
+    {
+      "path": "core\\personas\\persona_luna.py",
+      "size": 1069,
+      "mtime": 1754388983.929775
+    },
+    {
+      "path": "core\\personas\\persona_mikasa.py",
+      "size": 1060,
+      "mtime": 1754388982.4991305
+    },
+    {
+      "path": "core\\personas\\persona_milly.py",
+      "size": 924,
+      "mtime": 1754388973.4358313
+    },
+    {
+      "path": "core\\personas\\persona_nami.py",
+      "size": 821,
+      "mtime": 1754388990.093713
+    },
+    {
+      "path": "core\\personas\\persona_phrolova.py",
+      "size": 897,
+      "mtime": 1754388987.627276
+    },
+    {
+      "path": "core\\personas\\persona_shorekeeper.py",
+      "size": 1164,
+      "mtime": 1754388981.2765844
+    },
+    {
+      "path": "data\\config\\modes.json",
+      "size": 47,
+      "mtime": 1754103758.639922
+    },
+    {
+      "path": "data\\config\\task_manager.json",
+      "size": 186,
+      "mtime": 1754103758.639922
+    },
+    {
+      "path": "data\\memory\\docs\\kimba_sd_integration_de.txt",
+      "size": 1047,
+      "mtime": 1754103758.6572475
+    },
+    {
+      "path": "data\\memory\\docs\\kimba_sd_integration_en.txt",
+      "size": 830,
+      "mtime": 1754103758.6572475
+    },
+    {
+      "path": "data\\memory\\kimba_memory\\longterm_memories.db",
+      "size": 12288,
+      "mtime": 1754367445.6822872
+    },
+    {
+      "path": "data\\memory\\kimba_memory\\longterm_memories.json",
+      "size": 7651,
+      "mtime": 1754103758.6582484
+    },
+    {
+      "path": "data\\memory\\project_history\\project_summary.md",
+      "size": 2759,
+      "mtime": 1754103758.6582484
+    },
+    {
+      "path": "data\\memory\\reflections\\reflection_001.txt",
+      "size": 58,
+      "mtime": 1754103758.6582484
+    },
+    {
+      "path": "data\\visual\\__init__.py",
+      "size": 0,
+      "mtime": 1754103758.9731822
+    },
+    {
+      "path": "data\\visual\\sprites\\list.txt",
+      "size": 2442,
+      "mtime": 1754103758.9805512
+    },
+    {
+      "path": "desktop_kimba\\desktop_kimba_main.py",
+      "size": 1044,
+      "mtime": 1754103758.6521387
+    },
+    {
+      "path": "desktop_kimba\\desktop_kimba_mood_sync.py",
+      "size": 3486,
+      "mtime": 1754103758.6521387
+    },
+    {
+      "path": "desktop_kimba\\kimba_desktop_cat.py",
+      "size": 1785,
+      "mtime": 1754103758.6532435
+    },
+    {
+      "path": "desktop_kimba\\kimba_masterplan.md",
+      "size": 7107,
+      "mtime": 1754103758.6532435
+    },
+    {
+      "path": "desktop_kimba\\mood_engine.py",
+      "size": 4458,
+      "mtime": 1754103758.6532435
+    },
+    {
+      "path": "desktop_kimba\\README.md",
+      "size": 0,
+      "mtime": 1754103758.651137
+    },
+    {
+      "path": "desktop_kimba\\__init__.py",
+      "size": 0,
+      "mtime": 1754103758.651137
+    },
+    {
+      "path": "gui\\interface.py",
+      "size": 1107,
+      "mtime": 1754103758.977953
+    },
+    {
+      "path": "gui\\kimba_gui_prototype.py",
+      "size": 5059,
+      "mtime": 1754497869.4532926
+    },
+    {
+      "path": "gui\\kimba_interface.py",
+      "size": 986,
+      "mtime": 1754103758.977953
+    },
+    {
+      "path": "gui\\themes\\kimba_ui.css",
+      "size": 292,
+      "mtime": 1754103758.9795363
+    },
+    {
+      "path": "gui\\themes\\themes.css",
+      "size": 213,
+      "mtime": 1754103758.9810448
+    },
+    {
+      "path": "gui\\themes\\themes.py",
+      "size": 571,
+      "mtime": 1754103758.9815073
+    },
+    {
+      "path": "identity\\identity_engine.py",
+      "size": 618,
+      "mtime": 1754103758.6552458
+    },
+    {
+      "path": "identity\\personality.json",
+      "size": 131,
+      "mtime": 1754103758.6552458
+    },
+    {
+      "path": "main\\__init__.py",
+      "size": 0,
+      "mtime": 1754103758.6562467
+    },
+    {
+      "path": "memory\\kimba_memory\\longterm_memories.db",
+      "size": 16384,
+      "mtime": 1754505877.7627184
+    },
+    {
+      "path": "models\\Phi-3-mini-4k-instruct\\.gitattributes",
+      "size": 1554,
+      "mtime": 1754312876.36307
+    },
+    {
+      "path": "models\\Phi-3-mini-4k-instruct\\added_tokens.json",
+      "size": 306,
+      "mtime": 1754312876.3210404
+    },
+    {
+      "path": "models\\Phi-3-mini-4k-instruct\\CODE_OF_CONDUCT.md",
+      "size": 453,
+      "mtime": 1754312876.3415637
+    },
+    {
+      "path": "models\\Phi-3-mini-4k-instruct\\config.json",
+      "size": 967,
+      "mtime": 1754312876.3165278
+    },
+    {
+      "path": "models\\Phi-3-mini-4k-instruct\\configuration_phi3.py",
+      "size": 11153,
+      "mtime": 1754312876.7013893
+    },
+    {
+      "path": "models\\Phi-3-mini-4k-instruct\\generation_config.json",
+      "size": 181,
+      "mtime": 1754312876.7206602
+    },
+    {
+      "path": "models\\Phi-3-mini-4k-instruct\\LICENSE",
+      "size": 1105,
+      "mtime": 1754312876.4484422
+    },
+    {
+      "path": "models\\Phi-3-mini-4k-instruct\\model-00001-of-00002.safetensors",
+      "size": 4972489328,
+      "mtime": 1754287869.4690487
+    },
+    {
+      "path": "models\\Phi-3-mini-4k-instruct\\model-00002-of-00002.safetensors",
+      "size": 2669692552,
+      "mtime": 1754287550.8279872
+    },
+    {
+      "path": "models\\Phi-3-mini-4k-instruct\\model.safetensors.index.json",
+      "size": 16533,
+      "mtime": 1754312876.7343845
+    },
+    {
+      "path": "models\\Phi-3-mini-4k-instruct\\modeling_phi3.py",
+      "size": 73193,
+      "mtime": 1754312876.7597644
+    },
+    {
+      "path": "models\\Phi-3-mini-4k-instruct\\NOTICE.md",
+      "size": 1809,
+      "mtime": 1754312876.3498192
+    },
+    {
+      "path": "models\\Phi-3-mini-4k-instruct\\README.md",
+      "size": 21629,
+      "mtime": 1754312876.5245297
+    },
+    {
+      "path": "models\\Phi-3-mini-4k-instruct\\sample_finetune.py",
+      "size": 6401,
+      "mtime": 1754312876.8869164
+    },
+    {
+      "path": "models\\Phi-3-mini-4k-instruct\\SECURITY.md",
+      "size": 2697,
+      "mtime": 1754312876.3352947
+    },
+    {
+      "path": "models\\Phi-3-mini-4k-instruct\\special_tokens_map.json",
+      "size": 599,
+      "mtime": 1754312876.9376843
+    },
+    {
+      "path": "models\\Phi-3-mini-4k-instruct\\tokenizer.json",
+      "size": 1937869,
+      "mtime": 1754312877.1888676
+    },
+    {
+      "path": "models\\Phi-3-mini-4k-instruct\\tokenizer.model",
+      "size": 499723,
+      "mtime": 1754286730.9320202
+    },
+    {
+      "path": "models\\Phi-3-mini-4k-instruct\\tokenizer_config.json",
+      "size": 3441,
+      "mtime": 1754312877.1560817
+    },
+    {
+      "path": "models\\Phi-3-mini-4k-instruct\\.cache\\huggingface\\.gitignore",
+      "size": 1,
+      "mtime": 1754312875.9975045
+    },
+    {
+      "path": "models\\Phi-3-mini-4k-instruct\\.cache\\huggingface\\download\\.gitattributes.metadata",
+      "size": 104,
+      "mtime": 1754312876.3668444
+    },
+    {
+      "path": "models\\Phi-3-mini-4k-instruct\\.cache\\huggingface\\download\\added_tokens.json.metadata",
+      "size": 104,
+      "mtime": 1754312876.3245654
+    },
+    {
+      "path": "models\\Phi-3-mini-4k-instruct\\.cache\\huggingface\\download\\CODE_OF_CONDUCT.md.metadata",
+      "size": 104,
+      "mtime": 1754312876.3446448
+    },
+    {
+      "path": "models\\Phi-3-mini-4k-instruct\\.cache\\huggingface\\download\\config.json.metadata",
+      "size": 104,
+      "mtime": 1754312876.3210404
+    },
+    {
+      "path": "models\\Phi-3-mini-4k-instruct\\.cache\\huggingface\\download\\configuration_phi3.py.metadata",
+      "size": 103,
+      "mtime": 1754312876.7054048
+    },
+    {
+      "path": "models\\Phi-3-mini-4k-instruct\\.cache\\huggingface\\download\\generation_config.json.metadata",
+      "size": 104,
+      "mtime": 1754312876.7237048
+    },
+    {
+      "path": "models\\Phi-3-mini-4k-instruct\\.cache\\huggingface\\download\\LICENSE.metadata",
+      "size": 103,
+      "mtime": 1754312876.451617
+    },
+    {
+      "path": "models\\Phi-3-mini-4k-instruct\\.cache\\huggingface\\download\\model-00001-of-00002.safetensors.metadata",
+      "size": 128,
+      "mtime": 1754312880.1958303
+    },
+    {
+      "path": "models\\Phi-3-mini-4k-instruct\\.cache\\huggingface\\download\\model-00002-of-00002.safetensors.metadata",
+      "size": 128,
+      "mtime": 1754312878.5003269
+    },
+    {
+      "path": "models\\Phi-3-mini-4k-instruct\\.cache\\huggingface\\download\\model.safetensors.index.json.metadata",
+      "size": 104,
+      "mtime": 1754312876.7391272
+    },
+    {
+      "path": "models\\Phi-3-mini-4k-instruct\\.cache\\huggingface\\download\\modeling_phi3.py.metadata",
+      "size": 104,
+      "mtime": 1754312876.7644546
+    },
+    {
+      "path": "models\\Phi-3-mini-4k-instruct\\.cache\\huggingface\\download\\NOTICE.md.metadata",
+      "size": 104,
+      "mtime": 1754312876.3528585
+    },
+    {
+      "path": "models\\Phi-3-mini-4k-instruct\\.cache\\huggingface\\download\\README.md.metadata",
+      "size": 104,
+      "mtime": 1754312876.5277624
+    },
+    {
+      "path": "models\\Phi-3-mini-4k-instruct\\.cache\\huggingface\\download\\sample_finetune.py.metadata",
+      "size": 104,
+      "mtime": 1754312876.8900387
+    },
+    {
+      "path": "models\\Phi-3-mini-4k-instruct\\.cache\\huggingface\\download\\SECURITY.md.metadata",
+      "size": 104,
+      "mtime": 1754312876.3383386
+    },
+    {
+      "path": "models\\Phi-3-mini-4k-instruct\\.cache\\huggingface\\download\\special_tokens_map.json.metadata",
+      "size": 104,
+      "mtime": 1754312876.9417806
+    },
+    {
+      "path": "models\\Phi-3-mini-4k-instruct\\.cache\\huggingface\\download\\tokenizer.json.metadata",
+      "size": 104,
+      "mtime": 1754312877.1928713
+    },
+    {
+      "path": "models\\Phi-3-mini-4k-instruct\\.cache\\huggingface\\download\\tokenizer.model.metadata",
+      "size": 128,
+      "mtime": 1754312876.8714418
+    },
+    {
+      "path": "models\\Phi-3-mini-4k-instruct\\.cache\\huggingface\\download\\tokenizer_config.json.metadata",
+      "size": 104,
+      "mtime": 1754312877.1602173
+    },
+    {
+      "path": "modules\\code_assistant.py",
+      "size": 2511,
+      "mtime": 1754103758.6607604
+    },
+    {
+      "path": "modules\\comfyui_handler.py",
+      "size": 2066,
+      "mtime": 1754182051.7598896
+    },
+    {
+      "path": "modules\\daily_cycle.py",
+      "size": 1756,
+      "mtime": 1754103758.661848
+    },
+    {
+      "path": "modules\\event_triggers_v3.py",
+      "size": 3111,
+      "mtime": 1754103758.6631675
+    },
+    {
+      "path": "modules\\file_organizer.py",
+      "size": 2665,
+      "mtime": 1754103758.6631675
+    },
+    {
+      "path": "modules\\git_assistant.py",
+      "size": 3180,
+      "mtime": 1754103758.6631675
+    },
+    {
+      "path": "modules\\image_generator.py",
+      "size": 1983,
+      "mtime": 1754171181.106322
+    },
+    {
+      "path": "modules\\image_router.py",
+      "size": 3890,
+      "mtime": 1754283855.0529027
+    },
+    {
+      "path": "modules\\live_vision.py",
+      "size": 4917,
+      "mtime": 1754507105.1123638
+    },
+    {
+      "path": "modules\\mood_logic.py",
+      "size": 1403,
+      "mtime": 1754103758.6651704
+    },
+    {
+      "path": "modules\\response_style.py",
+      "size": 1625,
+      "mtime": 1754103758.6651704
+    },
+    {
+      "path": "modules\\task_engine.py",
+      "size": 1380,
+      "mtime": 1754103758.649685
+    },
+    {
+      "path": "modules\\vision.py",
+      "size": 4860,
+      "mtime": 1754306275.1093972
+    },
+    {
+      "path": "modules\\image_generation\\comfy_engine.py",
+      "size": 2201,
+      "mtime": 1754103758.6641695
+    },
+    {
+      "path": "modules\\image_generation\\sd_engine.py",
+      "size": 2164,
+      "mtime": 1754103758.6651704
+    },
+    {
+      "path": "overlay_client\\control.py",
+      "size": 966,
+      "mtime": 1754506882.307155
+    },
+    {
+      "path": "overlay_client\\overlay_client.py",
+      "size": 4560,
+      "mtime": 1754367288.9430494
+    },
+    {
+      "path": "overlay_client\\assets\\iuno_idle\\idle_01.png",
+      "size": 467359,
+      "mtime": 1754297198.254173
+    },
+    {
+      "path": "overlay_client\\assets\\iuno_idle\\idle_02.png",
+      "size": 1835426,
+      "mtime": 1754365850.3338823
+    },
+    {
+      "path": "overlay_client\\assets\\iuno_idle\\idle_03.png",
+      "size": 465392,
+      "mtime": 1754297202.4378693
+    },
+    {
+      "path": "overlay_client\\assets\\iuno_idle\\idle_04.png",
+      "size": 2845486,
+      "mtime": 1754296776.1776297
+    },
+    {
+      "path": "proposals\\proposal_001.txt",
+      "size": 68,
+      "mtime": 1754103758.6666732
+    },
+    {
+      "path": "proposals\\proposal_manifest.yml",
+      "size": 377,
+      "mtime": 1754103758.6666732
+    },
+    {
+      "path": "services\\auto_analyzer.py",
+      "size": 1819,
+      "mtime": 1754506517.844297
+    },
+    {
+      "path": "services\\auto_overlay_mood.py",
+      "size": 2274,
+      "mtime": 1754506940.295882
+    },
+    {
+      "path": "services\\auto_start.py",
+      "size": 540,
+      "mtime": 1754506439.3404315
+    },
+    {
+      "path": "services\\loops\\awareness_loop.py",
+      "size": 3287,
+      "mtime": 1754103758.6435087
+    },
+    {
+      "path": "services\\loops\\self_reflection_loop.py",
+      "size": 2054,
+      "mtime": 1754103758.6491826
+    },
+    {
+      "path": "services\\loops\\task_loop.py",
+      "size": 1558,
+      "mtime": 1754103758.649685
+    },
+    {
+      "path": "setups\\download_models.bat",
+      "size": 1696,
+      "mtime": 1754103758.6676874
+    },
+    {
+      "path": "setups\\download_models.py",
+      "size": 1586,
+      "mtime": 1754103758.668688
+    },
+    {
+      "path": "tools\\auto_doc_generator.py",
+      "size": 2672,
+      "mtime": 1754103758.970874
+    },
+    {
+      "path": "tools\\auto_merge_module.py",
+      "size": 2557,
+      "mtime": 1754103758.970874
+    },
+    {
+      "path": "tools\\auto_tester.py",
+      "size": 1333,
+      "mtime": 1754103758.970874
+    },
+    {
+      "path": "tools\\dialog_prompter.py",
+      "size": 1131,
+      "mtime": 1754103758.971976
+    },
+    {
+      "path": "tools\\file_editor.py",
+      "size": 5422,
+      "mtime": 1754362833.4425662
+    },
+    {
+      "path": "tools\\project_analyzer.py",
+      "size": 5866,
+      "mtime": 1754454898.5083356
+    },
+    {
+      "path": "tools\\proposal_executor.py",
+      "size": 3170,
+      "mtime": 1754503727.2069726
+    },
+    {
+      "path": "tools\\proposal_handler.py",
+      "size": 5522,
+      "mtime": 1754503726.1596358
+    },
+    {
+      "path": "tools\\review_center.py",
+      "size": 1540,
+      "mtime": 1754103758.971976
+    },
+    {
+      "path": "tools\\system_control.py",
+      "size": 3241,
+      "mtime": 1754103758.9731822
+    }
+  ],
+  "sinnlos": [],
+  "nicht_genutzt": [
+    "app\\Kimba_AI_v2.py",
+    "app\\kimba_desktop_app.py",
+    "app\\kimba_startup.py",
+    "archive\\event_triggers_v3.py",
+    "archive\\legacy_ui\\kimba_terminal_ui.py",
+    "archive\\legacy_ui\\kimba_terminal_ui2.py",
+    "archive\\legacy_ui\\kimba_terminal_ui3.py",
+    "archive\\old_app_versions\\Kimba_AI_vX.py",
+    "archive\\old_app_versions\\Kimba_AI_vX3.py",
+    "archive\\old_app_versions\\Kimba_AI_vXx.py",
+    "archive\\old_app_versions\\Kimba_AI_vX_integrated_clean.py",
+    "archive\\old_core\\kimba_core.py",
+    "archive\\old_core\\kimba_desktop_cat.py",
+    "archive\\old_core\\llm_router.py",
+    "archive\\unused_events\\event_triggers_v2.py",
+    "archive\\unused_personas\\persona_api_unused.py",
+    "archive\\unused_personas\\persona_unused.py",
+    "archive\\unused_personas\\persona_unused2.py",
+    "core\\auto_executor.py",
+    "core\\billing_monitor.py",
+    "core\\goal_manager.py",
+    "core\\kimba_core.py",
+    "core\\llm_router.py",
+    "core\\memory_filter.py",
+    "core\\memory_store.py",
+    "core\\memory_store_v2_linked.py",
+    "core\\module_loader.py",
+    "core\\persona_manager.py",
+    "core\\project_manager.py",
+    "core\\self_mod_engine.py",
+    "core\\user_profile.py",
+    "core\\__init__.py",
+    "core\\personas\\persona_augusta.py",
+    "core\\personas\\persona_bella.py",
+    "core\\personas\\persona_carlotta.py",
+    "core\\personas\\persona_frieren.py",
+    "core\\personas\\persona_iuno_api.py",
+    "core\\personas\\persona_iuno_local.py",
+    "core\\personas\\persona_kimba_cat.py",
+    "core\\personas\\persona_lucy.py",
+    "core\\personas\\persona_luna.py",
+    "core\\personas\\persona_mikasa.py",
+    "core\\personas\\persona_milly.py",
+    "core\\personas\\persona_nami.py",
+    "core\\personas\\persona_phrolova.py",
+    "core\\personas\\persona_shorekeeper.py",
+    "data\\visual\\__init__.py",
+    "desktop_kimba\\desktop_kimba_main.py",
+    "desktop_kimba\\desktop_kimba_mood_sync.py",
+    "desktop_kimba\\kimba_desktop_cat.py",
+    "desktop_kimba\\__init__.py",
+    "gui\\interface.py",
+    "gui\\kimba_gui_prototype.py",
+    "gui\\kimba_interface.py",
+    "gui\\themes\\themes.py",
+    "identity\\identity_engine.py",
+    "main\\__init__.py",
+    "models\\Phi-3-mini-4k-instruct\\configuration_phi3.py",
+    "models\\Phi-3-mini-4k-instruct\\modeling_phi3.py",
+    "models\\Phi-3-mini-4k-instruct\\sample_finetune.py",
+    "modules\\code_assistant.py",
+    "modules\\comfyui_handler.py",
+    "modules\\event_triggers_v3.py",
+    "modules\\git_assistant.py",
+    "modules\\image_generator.py",
+    "modules\\image_router.py",
+    "modules\\live_vision.py",
+    "modules\\task_engine.py",
+    "modules\\image_generation\\comfy_engine.py",
+    "overlay_client\\control.py",
+    "services\\auto_analyzer.py",
+    "services\\auto_overlay_mood.py",
+    "services\\auto_start.py",
+    "services\\loops\\awareness_loop.py",
+    "services\\loops\\self_reflection_loop.py",
+    "services\\loops\\task_loop.py",
+    "setups\\download_models.py",
+    "tools\\auto_doc_generator.py",
+    "tools\\auto_merge_module.py",
+    "tools\\dialog_prompter.py",
+    "tools\\file_editor.py",
+    "tools\\project_analyzer.py",
+    "tools\\proposal_executor.py",
+    "tools\\review_center.py",
+    "tools\\system_control.py"
+  ],
+  "veraltet": []
+}

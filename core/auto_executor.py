@@ -2,7 +2,7 @@ import os
 import time
 import threading
 from datetime import datetime
-from core.proposal_executor import execute_proposal
+from tools.proposal_executor import execute_proposal
 from core.longterm_memory import add_memory
 
 # Ordner, in dem genehmigte Vorschläge liegen

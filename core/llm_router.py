@@ -150,3 +150,30 @@ class KimbaLLMRouter:
             self.load_model()
         local_response = self.ask_local(prompt)
         return (local_response, "LOCAL") if return_source else local_response
+    
+    def ask_persona(self, persona_name, prompt, return_source=False):
+        """
+        Ruft den Prompt über eine bestimmte Persona ab.
+        """
+        self.persona_manager.active_persona = persona_name
+        
+        if persona_name not in self.personas:
+            raise ValueError(f"Persona '{persona_name}' nicht gefunden.")
+    
+        persona = self.personas[persona_name]
+        persona_prompt = persona.get_prompt()  # oder persona.system_prompt, je nachdem
+
+        full_prompt = f"{persona_prompt}\n{prompt}"
+
+        # 1️⃣ API-First
+        api_response = self.ask_api(full_prompt)
+        if api_response:
+            return (api_response, "API") if return_source else api_response
+
+        # 2️⃣ Lokales Modell als Fallback
+        print("[INFO] 🌙 Alle APIs fehlgeschlagen – wechsle zu lokalem Modell...")
+        if self.local_model is None:
+            self.load_model()
+        local_response = self.ask_local(full_prompt)
+        return (local_response, "LOCAL") if return_source else local_response
+

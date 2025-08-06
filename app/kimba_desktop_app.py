@@ -3,6 +3,7 @@ import threading
 import subprocess
 import socket
 import os
+sys.path.append(os.path.abspath(os.path.dirname(__file__) + "/.."))
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QPushButton, QTextEdit, QLineEdit, QLabel
@@ -10,14 +11,14 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt, pyqtSignal
 from datetime import datetime
 from core.llm_router import KimbaLLMRouter
-from core.image_router import KimbaImageRouter
-from core import vision
+from modules.image_router import KimbaImageRouter
+from modules import vision
 from core.persona_manager import PersonaManager
 from core.longterm_memory import add_memory
 from core.memory_filter import is_relevant_message
-from core.auto_start import start_all_background_services
-from core.auto_overlay_mood import register_user_activity
-from core.live_vision import (
+from services.auto_start import start_all_background_services
+from services.auto_overlay_mood import register_user_activity
+from modules.live_vision import (
     start_live_vision_in_background,
     stop_live_vision,
     set_reaction_callback

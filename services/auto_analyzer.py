@@ -2,7 +2,7 @@ import os
 import time
 import threading
 from datetime import datetime
-from core.project_analyzer import scan_project
+from tools.project_analyzer import scan_project
 from core.longterm_memory import add_memory
 
 # Intervall in Sekunden (z. B. 3600 = 1 Stunde)

@@ -1,7 +1,7 @@
 import time
 import threading
 from core.longterm_memory import search_memories
-from core.overlay_control import send_overlay_command
+from overlay_client.control import send_overlay_command
 
 MOOD_CHECK_INTERVAL = 30  # alle 30 Sekunden prüfen
 IDLE_TIMEOUT = 180  # nach 3 Minuten Inaktivität Idle/Sleep
