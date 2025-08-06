@@ -1,7 +1,90 @@
 import json
 import os
+import time
 
+# Speicherort für Analyse-Ergebnisse
 REPORT_FILE = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "project_analysis.json"))
+
+def scan_project(root_path=None):
+    """
+    Durchsucht den Projektordner und erstellt einen Analyse-Report.
+    Erkennt:
+      - unnötige Dateien (Backup, Temp, Cache)
+      - ungenutzte Dateien (keine Referenz im Code)
+      - veraltete Dateien (älter als 1 Jahr)
+    """
+    if root_path is None:
+        root_path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+
+    sinnlos_ext = [".tmp", ".log", ".bak", ".old"]
+    sinnlos_namen = ["__pycache__", ".DS_Store", "Thumbs.db"]
+
+    all_files = []
+    sinnlos = []
+    nicht_genutzt = []
+    veraltet = []
+
+    # 1. Alle Dateien sammeln
+    for dirpath, dirnames, filenames in os.walk(root_path):
+        # Cache-Ordner überspringen
+        dirnames[:] = [d for d in dirnames if d not in ["__pycache__", ".git", ".venv"]]
+        for filename in filenames:
+            file_path = os.path.join(dirpath, filename)
+            rel_path = os.path.relpath(file_path, root_path)
+            ext = os.path.splitext(filename)[1].lower()
+
+            file_info = {
+                "path": rel_path,
+                "size": os.path.getsize(file_path),
+                "mtime": os.path.getmtime(file_path)
+            }
+            all_files.append(file_info)
+
+            # 2. Sinnlose Dateien erkennen
+            if ext in sinnlos_ext or filename in sinnlos_namen:
+                sinnlos.append(rel_path)
+
+            # 3. Veraltete Dateien (älter als 365 Tage)
+            if time.time() - file_info["mtime"] > 365 * 24 * 60 * 60:
+                veraltet.append(rel_path)
+
+    # 4. Referenzen prüfen – sehr simple Variante:
+    #    Wenn eine .py-Datei nicht in irgendeinem anderen File importiert wird → "nicht genutzt"
+    py_files = [f["path"] for f in all_files if f["path"].endswith(".py")]
+    file_contents = {}
+    for f in py_files:
+        try:
+            with open(os.path.join(root_path, f), "r", encoding="utf-8") as src:
+                file_contents[f] = src.read()
+        except Exception:
+            file_contents[f] = ""
+
+    for f in py_files:
+        basename = os.path.splitext(os.path.basename(f))[0]
+        used = False
+        for other_f, content in file_contents.items():
+            if f != other_f and (f"import {basename}" in content or f"from {basename}" in content):
+                used = True
+                break
+        if not used:
+            nicht_genutzt.append(f)
+
+    # 5. Zusammenfassung speichern
+    report_data = {
+        "summary": {
+            "total_files": len(all_files),
+            "total_py_files": len(py_files),
+        },
+        "files": all_files,
+        "sinnlos": sinnlos,
+        "nicht_genutzt": nicht_genutzt,
+        "veraltet": veraltet
+    }
+
+    with open(REPORT_FILE, "w", encoding="utf-8") as f:
+        json.dump(report_data, f, indent=2, ensure_ascii=False)
+
+    return f"✅ Projektanalyse abgeschlossen. {len(all_files)} Dateien gescannt."
 
 def analyze_report():
     if not os.path.exists(REPORT_FILE):
@@ -66,4 +149,6 @@ def analyze_report():
     return persona_message
 
 if __name__ == "__main__":
+    # Falls direkt ausgeführt → zuerst scannen, dann berichten
+    print(scan_project())
     print(analyze_report())
