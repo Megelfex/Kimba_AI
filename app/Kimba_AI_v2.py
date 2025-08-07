@@ -36,7 +36,7 @@ class ChatBubble(QWidget):
             font-size: 14px;
         """)
 
-        if sender in ["Iuno", "Augusta"]:
+        if sender == "Augusta":
             layout.addWidget(label)
             layout.addStretch()
         else:
@@ -45,19 +45,19 @@ class ChatBubble(QWidget):
         self.setLayout(layout)
 
 # === Main Window ===
-class KimbaV2Chat(QWidget):
+class KimbaDevChat(QWidget):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Kimba AI v2 – Chat & Dev Mode")
+        self.setWindowTitle("Kimba Dev Assistant – Augusta only")
         self.resize(900, 650)
 
         # Core Systeme
         self.persona_manager = PersonaManager()
         self.llm = KimbaLLMRouter()
 
-        # Nur Iuno laden
-        self.persona_manager.load_persona("persona_iuno_local")
-        self.active_persona = "Iuno"
+        # Nur Augusta laden und setzen
+        #self.persona_manager.load_persona("persona_augusta")
+        self.active_persona = "Augusta"
 
         # GUI Layout
         self.chat_area_layout = QVBoxLayout()
@@ -97,7 +97,7 @@ class KimbaV2Chat(QWidget):
 
         self.setStyleSheet("background-color: #121212;")
 
-        self.add_message("System", "Welcome to Kimba AI v2. Type !augusta to enter Dev Mode, or !iuno to switch back to Chat.")
+        self.add_message("System", "Willkommen, Alex. Augusta ist bereit. Gib mir einfach was zu tun.")
 
     def add_message(self, sender, text):
         bubble = ChatBubble(sender, text)
@@ -110,40 +110,29 @@ class KimbaV2Chat(QWidget):
         self.input_field.clear()
         self.add_message("You", user_text)
 
-        # Persona-Switching
-        if user_text.lower() == "!augusta":
-            self.persona_manager.load_persona("persona_augusta")
-            self.active_persona = "Augusta"
-            self.add_message("System", "Switched to Augusta (Dev Mode).")
-            return
-        elif user_text.lower() == "!iuno":
-            self.active_persona = "Iuno"
-            self.add_message("System", "Switched to Iuno (Chat Mode).")
-            return
-
-        # Speicheraktion (Memory speichern)
+        # Memory speichern
         memory.add_memory(
             content=user_text,
             mood="neutral",
             category="user_input",
-            tags=[self.active_persona]
+            tags=["Augusta"]
         )
 
         # Dev-Befehl verarbeiten
-        if self.active_persona == "Augusta" and user_text.startswith("dev:"):
+        if user_text.startswith("dev:"):
             self.handle_dev_command(user_text[4:].strip())
             return
 
         # Antwort generieren
-        response = self.llm.ask_persona(self.active_persona, user_text)
-        self.add_message(self.active_persona, response)
+        response = self.llm.ask(user_text)
+        self.add_message("Augusta", response)
 
         # Antwort speichern
         memory.add_memory(
             content=response,
             mood="neutral",
             category="persona_response",
-            tags=[self.active_persona]
+            tags=["Augusta"]
         )
 
     def handle_dev_command(self, command):
@@ -176,6 +165,6 @@ class KimbaV2Chat(QWidget):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    window = KimbaV2Chat()
+    window = KimbaDevChat()
     window.show()
     sys.exit(app.exec())

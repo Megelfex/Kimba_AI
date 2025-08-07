@@ -5,15 +5,21 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 from core.longterm_memory import semantic_search
 from core.persona_manager import PersonaManager
 
-# Lade .env Datei
 load_dotenv()
 
 class KimbaLLMRouter:
-    def __init__(self, model_choice="Phi-3-mini-4k-instruct"):
-        # Persona Manager initialisieren
-        self.persona_manager = PersonaManager()
+    def __init__(self, persona_manager=None, model_choice="Phi-3-mini-4k-instruct"):
+        # Persona Manager
+        if persona_manager is None:
+            self.persona_manager = PersonaManager()
+        else:
+            self.persona_manager = persona_manager
 
-        # Lokale Modell-Infos
+        dev_mode = os.getenv("KIMBA_DEV_MODE", "0") == "1"
+        self.active_persona = "Augusta" if dev_mode else "Iuno"
+        self.persona_manager.set_active_persona(self.active_persona)
+
+        # Lokales Modell
         self.model_map = {
             "Phi-3-mini-4k-instruct": {
                 "local_dir": "./models/Phi-3-mini-4k-instruct",
@@ -22,8 +28,10 @@ class KimbaLLMRouter:
         }
         self.local_dir = self.model_map[model_choice]["local_dir"]
         self.hf_model_id = self.model_map[model_choice]["hf_id"]
+        self.local_model = None
+        self.tokenizer = None
 
-        # API-Kette mit Token aus .env
+        # APIs
         self.api_chain = [
             {
                 "name": "OpenAI GPT",
@@ -54,13 +62,16 @@ class KimbaLLMRouter:
                 "limit": 1_000_000
             }
         ]
-
         self.api_usage = {api["name"]: 0 for api in self.api_chain}
-        self.local_model = None
-        self.tokenizer = None
 
     # ---------------------------------------------------
-    # Lokales Modell laden
+    def set_active_persona(self, name):
+        """Wechselt die aktive Persona im Router und im Manager."""
+        if name not in self.persona_manager.personas:
+            raise ValueError(f"Persona '{name}' nicht gefunden.")
+        self.persona_manager.active_persona = name
+        self.active_persona = name
+
     # ---------------------------------------------------
     def load_model(self):
         print(f"[INFO] 📥 Lade lokales Modell: {self.local_dir}")
@@ -72,12 +83,9 @@ class KimbaLLMRouter:
             trust_remote_code=True
         )
 
-    # ---------------------------------------------------
-    # Lokale Anfrage
-    # ---------------------------------------------------
     def ask_local(self, prompt, max_tokens=512):
         persona_prompt = self.persona_manager.get_active_prompt()
-        full_prompt = persona_prompt + "\n" + prompt
+        full_prompt = f"{persona_prompt}\n{prompt}"
         inputs = self.tokenizer(full_prompt, return_tensors="pt").to(self.local_model.device)
         outputs = self.local_model.generate(
             **inputs,
@@ -87,12 +95,9 @@ class KimbaLLMRouter:
         )
         return self.tokenizer.decode(outputs[0], skip_special_tokens=True)
 
-    # ---------------------------------------------------
-    # API-Anfrage
-    # ---------------------------------------------------
     def ask_api(self, prompt, max_tokens=512):
         persona_prompt = self.persona_manager.get_active_prompt()
-        api_prompt = persona_prompt + "\n" + prompt
+        api_prompt = f"{persona_prompt}\n{prompt}"
 
         for api in self.api_chain:
             if not api["token"]:
@@ -126,11 +131,8 @@ class KimbaLLMRouter:
                 print(f"[WARN] API {api['name']} Exception: {e}")
         return None
 
-    # ---------------------------------------------------
-    # API-First mit Local-Fallback + Erinnerungskontext
-    # ---------------------------------------------------
     def ask(self, prompt, return_source=False):
-        # 🔍 Semantische Suche für Erinnerungen
+        # 🔍 Semantische Erinnerungen
         memory_hits = []
         results = semantic_search(prompt, limit=3)
         for sim, _, ts, content, mood, category, tags in results:
@@ -144,36 +146,29 @@ class KimbaLLMRouter:
         if api_response:
             return (api_response, "API") if return_source else api_response
 
-        # 2️⃣ Lokales Modell als Fallback
+        # 2️⃣ Local fallback
         print("[INFO] 🌙 Alle APIs fehlgeschlagen – wechsle zu lokalem Modell...")
         if self.local_model is None:
             self.load_model()
         local_response = self.ask_local(prompt)
         return (local_response, "LOCAL") if return_source else local_response
-    
+
     def ask_persona(self, persona_name, prompt, return_source=False):
         """
-        Ruft den Prompt über eine bestimmte Persona ab.
+        Explizit mit benannter Persona kommunizieren.
         """
-        self.persona_manager.active_persona = persona_name
-        
-        if persona_name not in self.personas:
-            raise ValueError(f"Persona '{persona_name}' nicht gefunden.")
-    
-        persona = self.personas[persona_name]
-        persona_prompt = persona.get_prompt()  # oder persona.system_prompt, je nachdem
-
+        self.persona_manager.set_active_persona(persona_name)
+        persona_prompt = self.persona_manager.get_active_prompt()
         full_prompt = f"{persona_prompt}\n{prompt}"
 
-        # 1️⃣ API-First
-        api_response = self.ask_api(full_prompt)
+        # 1️⃣ API
+        api_response = self.ask_api(prompt)
         if api_response:
             return (api_response, "API") if return_source else api_response
 
-        # 2️⃣ Lokales Modell als Fallback
+        # 2️⃣ Local
         print("[INFO] 🌙 Alle APIs fehlgeschlagen – wechsle zu lokalem Modell...")
         if self.local_model is None:
             self.load_model()
-        local_response = self.ask_local(full_prompt)
+        local_response = self.ask_local(prompt)
         return (local_response, "LOCAL") if return_source else local_response
-
