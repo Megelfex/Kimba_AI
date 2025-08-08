@@ -12,7 +12,7 @@ from PyQt6.QtGui import QPixmap, QFileSystemModel
 
 # Core
 from src.kimba_ai.core.personas.persona_manager import PersonaManager
-from src.kimba_ai.core.llm.llm_router import KimbaLLMRouter
+from src.kimba_ai.core.llm.router import KimbaLLMRouter
 
 # Memory system
 from src.kimba_ai.core.memory.manager import MemoryManager

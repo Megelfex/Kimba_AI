@@ -16,7 +16,7 @@ from modules import vision
 from core.persona_manager import PersonaManager
 from core.longterm_memory import add_memory
 from core.memory_filter import is_relevant_message
-from services.auto_start import start_all_background_services
+from src.kimba_ai.services.startup_loop import start_all_background_services
 from services.auto_overlay_mood import register_user_activity
 from modules.live_vision import (
     start_live_vision_in_background,
