@@ -1,160 +1,288 @@
-"""
-🧠 longterm_memory.py
-EN: Stores and retrieves Kimba's long-term memories using SQLite with semantic search.
-DE: Speichert und ruft Kimbas Langzeiterinnerungen mit SQLite und semantischer Suche ab.
-"""
+# longterm_memory.py
+# Semantisches Langzeitgedächtnis mit FAISS + SentenceTransformers
+# - JSON-Metadaten + FAISS-Index + Embeddings-Pickle
+# - Duplikaterkennung per Fingerprint
+# - Projekt-/Namespace-Tagging
+# - Robustes Laden/Speichern (atomic), Konsistenz-Checks
 
 import os
-import sqlite3
+import json
+import time
+import uuid
+import pickle
+import hashlib
+from typing import List, Tuple, Optional
+
 import numpy as np
-from datetime import datetime, timedelta
-from dotenv import load_dotenv
-from openai import OpenAI
+import faiss
+from sentence_transformers import SentenceTransformer
 
-load_dotenv()
+# Speicherpfade
+MEMORY_DIR    = "memory"
+MEMORY_JSON   = os.path.join(MEMORY_DIR, "longterm_memory.json")
+FAISS_INDEX   = os.path.join(MEMORY_DIR, "longterm_index.faiss")
+EMBED_PKL     = os.path.join(MEMORY_DIR, "longterm_embeddings.pkl")
 
-# OpenAI Client
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+# Embedding-Modell (384-D Vektor)
+EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
+EMBED_DIM = 384  # all-MiniLM-L6-v2
 
-# 📁 Speicherort der SQLite-Datenbank
-DB_PATH = os.path.join(os.path.dirname(__file__), "..", "memory", "kimba_memory", "longterm_memories.db")
+def _ensure_dirs():
+    os.makedirs(MEMORY_DIR, exist_ok=True)
 
-def _connect():
-    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
-    return sqlite3.connect(DB_PATH)
+def _atomic_write(path: str, data: bytes):
+    tmp = f"{path}.tmp"
+    with open(tmp, "wb") as f:
+        f.write(data)
+    os.replace(tmp, path)
 
-def _init_db():
-    with _connect() as conn:
-        conn.execute("""
-        CREATE TABLE IF NOT EXISTS memories (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp TEXT NOT NULL,
-            content TEXT NOT NULL,
-            mood TEXT,
-            category TEXT,
-            tags TEXT,
-            embedding BLOB
-        )
-        """)
-        conn.commit()
+def _atomic_write_text(path: str, text: str):
+    tmp = f"{path}.tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        f.write(text)
+    os.replace(tmp, path)
 
-# Initialisierung sicherstellen
-_init_db()
+def _fingerprint(text: str) -> str:
+    """Stabile Duplikat-Erkennung (casefold + whitespace-normalisiert + sha256)."""
+    norm = " ".join(text.casefold().split())
+    return hashlib.sha256(norm.encode("utf-8")).hexdigest()
 
-# --------------------------------------------------
-# Hilfsfunktionen
-# --------------------------------------------------
-def _get_embedding(text: str) -> np.ndarray:
-    """Erzeugt ein Embedding für den gegebenen Text."""
-    try:
-        response = client.embeddings.create(
-            model="text-embedding-ada-002",
-            input=text
-        )
-        return np.array(response.data[0].embedding, dtype=np.float32)
-    except Exception as e:
-        print(f"[WARN] Konnte Embedding nicht erstellen: {e}")
-        return None
 
-def _serialize_vector(vec: np.ndarray) -> bytes:
-    return vec.tobytes() if vec is not None else None
+class LongTermMemory:
+    def __init__(self, model_name: str = EMBEDDING_MODEL):
+        _ensure_dirs()
+        self.model_name = model_name
+        self.model = SentenceTransformer(self.model_name)
 
-def _deserialize_vector(blob: bytes) -> np.ndarray:
-    return np.frombuffer(blob, dtype=np.float32) if blob else None
+        # In-Memory-Daten
+        self.memories: List[dict] = []   # Metadaten-Liste
+        self.embeddings: List[np.ndarray] = []  # float32-Vektoren
+        self.index: Optional[faiss.IndexFlatL2] = None
 
-# --------------------------------------------------
-# Speicher-Funktionen
-# --------------------------------------------------
-def add_memory(content, mood=None, category="general", tags=None):
-    """
-    EN: Adds a memory entry with embedding.
-    DE: Fügt einen Erinnerungseintrag mit Embedding hinzu.
-    """
-    ts = datetime.now().isoformat()
-    tags_str = ",".join(tags) if tags else None
-    emb = _get_embedding(content)
-    with _connect() as conn:
-        conn.execute("""
-        INSERT INTO memories (timestamp, content, mood, category, tags, embedding)
-        VALUES (?, ?, ?, ?, ?, ?)
-        """, (ts, content, mood, category, tags_str, _serialize_vector(emb)))
-        conn.commit()
-    return f"💾 Memory saved ({category}): {content[:50]}..."
+        # Laden (Metadaten + Embeddings + FAISS)
+        self._load_memories()
+        self._load_embeddings()
+        self._load_or_build_faiss()
 
-def get_recent_memories(days=3, limit=10):
-    cutoff = datetime.now() - timedelta(days=days)
-    with _connect() as conn:
-        cur = conn.execute("""
-        SELECT timestamp, content, mood, category, tags
-        FROM memories
-        WHERE timestamp >= ?
-        ORDER BY timestamp DESC
-        LIMIT ?
-        """, (cutoff.isoformat(), limit))
-        return cur.fetchall()
+        # Konsistenz checken
+        self._rebuild_if_inconsistent()
 
-def search_memories(keyword, limit=10):
-    """
-    EN: Keyword-based search (exact match).
-    DE: Schlüsselwortsuche (exakte Übereinstimmung).
-    """
-    with _connect() as conn:
-        cur = conn.execute("""
-        SELECT id, timestamp, content, mood, category, tags
-        FROM memories
-        WHERE content LIKE ? OR tags LIKE ?
-        ORDER BY timestamp DESC
-        LIMIT ?
-        """, (f"%{keyword}%", f"%{keyword}%", limit))
-        return cur.fetchall()
+    # -----------------------------
+    # Laden / Speichern
+    # -----------------------------
+    def _load_memories(self):
+        if os.path.exists(MEMORY_JSON):
+            with open(MEMORY_JSON, "r", encoding="utf-8") as f:
+                self.memories = json.load(f)
+        else:
+            self.memories = []
 
-def semantic_search(query, limit=5):
-    """
-    EN: Semantic search using embeddings (cosine similarity).
-    DE: Semantische Suche mit Embeddings (Kosinus-Ähnlichkeit).
-    """
-    query_emb = _get_embedding(query)
-    if query_emb is None:
-        return []
+    def _save_memories(self):
+        text = json.dumps(self.memories, indent=2, ensure_ascii=False)
+        _atomic_write_text(MEMORY_JSON, text)
 
-    with _connect() as conn:
-        cur = conn.execute("SELECT id, timestamp, content, mood, category, tags, embedding FROM memories")
-        results = []
-        for mem_id, ts, content, mood, category, tags, emb_blob in cur.fetchall():
-            emb = _deserialize_vector(emb_blob)
-            if emb is None:
+    def _load_embeddings(self):
+        if os.path.exists(EMBED_PKL):
+            with open(EMBED_PKL, "rb") as f:
+                self.embeddings = pickle.load(f)
+            # Safety: ensure dtype float32
+            self.embeddings = [np.asarray(v, dtype="float32") for v in self.embeddings]
+        else:
+            self.embeddings = []
+
+    def _save_embeddings(self):
+        data = pickle.dumps(self.embeddings, protocol=pickle.HIGHEST_PROTOCOL)
+        _atomic_write(EMBED_PKL, data)
+
+    def _load_or_build_faiss(self):
+        if os.path.exists(FAISS_INDEX):
+            self.index = faiss.read_index(FAISS_INDEX)
+        else:
+            self.index = faiss.IndexFlatL2(EMBED_DIM)
+            if self.embeddings:
+                mat = np.vstack(self.embeddings).astype("float32")
+                self.index.add(mat)
+
+    def _save_faiss(self):
+        faiss.write_index(self.index, FAISS_INDEX)
+
+    def _rebuild_if_inconsistent(self):
+        count_m = len(self.memories)
+        count_e = len(self.embeddings)
+        count_i = self.index.ntotal if self.index is not None else 0
+
+        if count_m == count_e == count_i:
+            return  # alles ok
+
+        # Rebuild aus Metadaten + Embeddings
+        # (falls Embeddings fehlen, neu berechnen)
+        if count_m != count_e:
+            # Embeddings neu aufbauen
+            self.embeddings = []
+            texts = [m["text"] for m in self.memories]
+            if texts:
+                vecs = self.model.encode(texts, convert_to_numpy=True, normalize_embeddings=False)
+                # Safety dtype
+                if vecs.dtype != np.float32:
+                    vecs = vecs.astype("float32")
+                self.embeddings = [v for v in vecs]
+            else:
+                self.embeddings = []
+
+            self._save_embeddings()
+
+        # FAISS neu aufbauen
+        self.index = faiss.IndexFlatL2(EMBED_DIM)
+        if self.embeddings:
+            mat = np.vstack(self.embeddings).astype("float32")
+            self.index.add(mat)
+        self._save_faiss()
+
+    # -----------------------------
+    # API
+    # -----------------------------
+    def add_memory(
+        self,
+        text: str,
+        category: str = "allgemein",
+        mood: str = "neutral",
+        tags: Optional[List[str]] = None,
+        project: Optional[str] = None,
+        timestamp: Optional[int] = None
+    ) -> bool:
+        """Fügt eine Erinnerung hinzu. Gibt False zurück, wenn Duplikat (Fingerprint) gefunden wird."""
+        if not text or not text.strip():
+            return False
+
+        fp = _fingerprint(text)
+        if any(m.get("fp") == fp for m in self.memories):
+            return False  # Duplikat
+
+        ts = int(timestamp) if timestamp is not None else int(time.time())
+        mem = {
+            "uuid": str(uuid.uuid4()),
+            "timestamp": ts,
+            "text": text,
+            "category": category,
+            "mood": mood,
+            "tags": tags or [],
+            "project": project,
+            "fp": fp,
+        }
+
+        # Embedding
+        vec = self.model.encode([text], convert_to_numpy=True)[0]
+        if vec.dtype != np.float32:
+            vec = vec.astype("float32")
+
+        # In-Memory updaten
+        self.memories.append(mem)
+        self.embeddings.append(vec)
+        self.index.add(vec.reshape(1, EMBED_DIM))
+
+        # Persistieren
+        self._save_memories()
+        self._save_embeddings()
+        self._save_faiss()
+        return True
+
+    def semantic_search(
+        self,
+        query: str,
+        limit: int = 5,
+        project: Optional[str] = None
+    ) -> List[Tuple[float, dict]]:
+        """Semantische Suche. Gibt Liste von (similarity, memory_dict) zurück.
+        similarity ~ [0..1], höher = ähnlicher.
+        Optional: `project` filtert Ergebnisse auf ein Projekt/Namensraum.
+        """
+        if not self.memories or not self.embeddings or self.index is None or self.index.ntotal == 0:
+            return []
+
+        q = self.model.encode([query], convert_to_numpy=True)
+        if q.dtype != np.float32:
+            q = q.astype("float32")
+
+        # Overfetch (besseres Ranking, dann filtern)
+        overfetch = min(max(limit * 3, limit), len(self.memories))
+        D, I = self.index.search(q, overfetch)
+
+        results: List[Tuple[float, dict]] = []
+        for dist, idx in zip(D[0], I[0]):
+            if idx < 0 or idx >= len(self.memories):
                 continue
-            # Kosinus-Ähnlichkeit
-            sim = np.dot(query_emb, emb) / (np.linalg.norm(query_emb) * np.linalg.norm(emb))
-            results.append((sim, mem_id, ts, content, mood, category, tags))
-        results.sort(reverse=True, key=lambda x: x[0])
-        return results[:limit]
+            m = self.memories[idx]
+            if project and m.get("project") != project:
+                continue
+            # L2-Distanz -> grobe "Similarity" (0..1). Optional: Cosine-Sim könnte besser sein, aber L2 reicht hier.
+            # Da MiniLM nicht normalisiert ist, nutzen wir eine einfache Heuristik:
+            # sim = 1 / (1 + dist)  -> (0..1], invertiert Distanz
+            sim = float(1.0 / (1.0 + float(dist)))
+            results.append((sim, m))
+            if len(results) >= limit:
+                break
 
-def delete_memory(mem_id):
-    with _connect() as conn:
-        conn.execute("DELETE FROM memories WHERE id = ?", (mem_id,))
-        conn.commit()
-    return f"🗑️ Memory {mem_id} deleted."
+        # Falls kaum Treffer durch project-Filter: ungefiltert fallbacken
+        if not results and project is not None:
+            for dist, idx in zip(D[0], I[0]):
+                if idx < 0 or idx >= len(self.memories):
+                    continue
+                m = self.memories[idx]
+                sim = float(1.0 / (1.0 + float(dist)))
+                results.append((sim, m))
+                if len(results) >= limit:
+                    break
 
-def cleanup_old_memories(days=180):
-    cutoff = datetime.now() - timedelta(days=days)
-    with _connect() as conn:
-        conn.execute("DELETE FROM memories WHERE timestamp < ?", (cutoff.isoformat(),))
-        conn.commit()
-    return f"🧹 Old memories older than {days} days deleted."
+        # Höchste Ähnlichkeit zuerst
+        results.sort(key=lambda x: x[0], reverse=True)
+        return results
 
-def summarize_recent_memories(days=3):
-    recents = get_recent_memories(days)
-    if not recents:
-        return "Ich erinnere mich an nichts Besonderes in den letzten Tagen."
-    summary = "Hier sind ein paar Dinge, an die ich mich erinnere:"
-    for ts, content, mood, category, tags in recents:
-        ts_fmt = datetime.fromisoformat(ts).strftime("%d.%m.%Y %H:%M")
-        mood_str = f" [{mood}]" if mood else ""
-        summary += f"\n• ({ts_fmt}) {content}{mood_str}"
-    return summary.strip()
+    def delete_memory(self, uuid_str: str) -> bool:
+        """Löscht eine Erinnerung (inkl. Rebuild des Index)."""
+        idx = next((i for i, m in enumerate(self.memories) if m["uuid"] == uuid_str), None)
+        if idx is None:
+            return False
 
-# 🧪 Testlauf
-if __name__ == "__main__":
-    print(add_memory("Heute haben wir am Overlay-Client gearbeitet.", mood="motiviert", tags=["projekt", "overlay"]))
-    print(semantic_search("Overlay Animation"))
+        # Entfernen
+        del self.memories[idx]
+        del self.embeddings[idx]
+
+        # Index neu aufbauen (FAISS unterstützt kein 'remove' bei FlatL2)
+        self.index = faiss.IndexFlatL2(EMBED_DIM)
+        if self.embeddings:
+            mat = np.vstack(self.embeddings).astype("float32")
+            self.index.add(mat)
+
+        # Speichern
+        self._save_memories()
+        self._save_embeddings()
+        self._save_faiss()
+        return True
+
+    def clear_all(self):
+        """Entfernt alle Erinnerungen und leert Index und Speicherdateien."""
+        self.memories = []
+        self.embeddings = []
+        self.index = faiss.IndexFlatL2(EMBED_DIM)
+
+        for p in (MEMORY_JSON, FAISS_INDEX, EMBED_PKL):
+            if os.path.exists(p):
+                os.remove(p)
+
+        # frische Files (leer) materialisieren
+        self._save_memories()
+        self._save_embeddings()
+        self._save_faiss()
+
+    def stats(self) -> dict:
+        return {
+            "count_memories": len(self.memories),
+            "count_embeddings": len(self.embeddings),
+            "index_ntotal": int(self.index.ntotal) if self.index is not None else 0,
+            "model": self.model_name,
+            "paths": {
+                "json": MEMORY_JSON,
+                "faiss": FAISS_INDEX,
+                "embeddings": EMBED_PKL
+            }
+        }
