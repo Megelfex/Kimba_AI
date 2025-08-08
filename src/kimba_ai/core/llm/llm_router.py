@@ -2,7 +2,7 @@
 import os, requests
 from dotenv import load_dotenv
 from transformers import AutoModelForCausalLM, AutoTokenizer
-from core.persona_manager import PersonaManager
+from src.kimba_ai.core.personas.persona_manager import PersonaManager
 
 load_dotenv()
 
