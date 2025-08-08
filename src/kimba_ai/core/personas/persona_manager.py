@@ -2,7 +2,7 @@ import importlib
 import os
 
 # Speicherort aller Personas
-PERSONA_DIR = "core/personas"
+PERSONA_DIR = "src/kimba_ai/core/personas"
 
 # Standard-Konfiguration
 DEFAULT_PERSONA = "persona_augusta"
@@ -43,7 +43,7 @@ class PersonaManager:
             return
 
         try:
-            module_path = f"core.personas.{persona_module_name}"
+            module_path = f"src.kimba_ai.core.personas.{persona_module_name}"
             module = importlib.import_module(module_path)
             persona_prompt = module.generate_persona_prompt()
             self.personas[persona_module_name] = persona_prompt

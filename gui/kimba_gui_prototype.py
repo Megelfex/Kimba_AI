@@ -11,11 +11,11 @@ from PyQt6.QtCore import Qt, QDir
 from PyQt6.QtGui import QPixmap, QFileSystemModel
 
 # Core
-from src.kimba_ai.core.memory.memory_manager import MemoryManager
+from src.kimba_ai.core.personas.persona_manager import PersonaManager
 from src.kimba_ai.core.llm.llm_router import KimbaLLMRouter
 
 # Memory system
-from src.kimba_ai.core.memory.memory_manager import MemoryManager
+from src.kimba_ai.core.memory.manager import MemoryManager
 
 
 # Persona map (UI label -> module name)

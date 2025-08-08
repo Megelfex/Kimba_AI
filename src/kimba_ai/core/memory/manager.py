@@ -1,5 +1,5 @@
-from src.kimba_ai.core.memory.session_memory import SessionMemory
-from src.kimba_ai.core.memory.longterm_memory import LongTermMemory
+from src.kimba_ai.core.memory.session import SessionMemory
+from src.kimba_ai.core.memory.longterm import LongTermMemory
 
 class MemoryManager:
     def __init__(self):
